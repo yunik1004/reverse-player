@@ -1,22 +1,27 @@
 <script lang="ts">
   import { progressToAngle, angleToProgress, TIP_OFFSET } from '$lib/tonearm';
+  import mascot from '$lib/assets/Regulus_Udimo_Sticker.webp';
 
   let {
     motorOn = $bindable(false),
     armOnRecord = $bindable(false),
     tonearmAngle = $bindable(0),
     volume = $bindable(50),
+    coverUrl = '',
     getPlaybackProgress,
     onSeek,
-    onPause
+    onPause,
+    onTogglePlaylist
   }: {
     motorOn: boolean;
     armOnRecord: boolean;
     tonearmAngle: number;
     volume: number;
+    coverUrl?: string;
     getPlaybackProgress: () => number | null;
     onSeek: () => void;
     onPause: () => void;
+    onTogglePlaylist: () => void;
   } = $props();
 
   let spinning = $state(false);
@@ -143,6 +148,9 @@
 <div class="turntable-wrapper" style="transform: scale({scale}); transform-origin: center center">
   <div class="turntable" bind:this={turntableEl}>
     <div class="wood-grain"></div>
+    <button class="mascot-btn" onclick={onTogglePlaylist} aria-label="Toggle playlist">
+      <img class="mascot" src={mascot} alt="" />
+    </button>
     <div class="metal-plate"></div>
 
     <div class="platter" style="transform: rotate({platterAngle}deg)">
@@ -151,11 +159,15 @@
         <div class="groove" style="width: {size}px; height: {size}px"></div>
       {/each}
       <div class="label">
-        <div class="label-inner">
-          <span class="label-title">Reverse</span>
-          <div class="label-divider"></div>
-          <span class="label-subtitle">1999</span>
-        </div>
+        {#if coverUrl}
+          <img class="label-cover" src={coverUrl} alt="" />
+        {:else}
+          <div class="label-inner">
+            <span class="label-title">Reverse</span>
+            <div class="label-divider"></div>
+            <span class="label-subtitle">1999</span>
+          </div>
+        {/if}
       </div>
       <div class="spindle"></div>
     </div>
@@ -348,6 +360,13 @@
       inset 0 1px 0 rgba(255, 200, 100, 0.04);
   }
 
+  .label-cover {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    object-fit: cover;
+  }
+
   .label-inner {
     width: 74px;
     height: 74px;
@@ -388,6 +407,27 @@
     z-index: 20;
     background: radial-gradient(circle at 40% 35%, #e0c870, #b89830);
     box-shadow: 0 0 4px rgba(212, 175, 55, 0.3);
+  }
+
+  .mascot-btn {
+    position: absolute;
+    top: 28px;
+    right: 36px;
+    z-index: 2;
+    background: none;
+    border: none;
+    padding: 0;
+    cursor: pointer;
+    transition: transform 0.2s;
+  }
+
+  .mascot-btn:hover {
+    transform: scale(1.1);
+  }
+
+  .mascot {
+    width: 50px;
+    opacity: 0.85;
   }
 
   .tonearm {

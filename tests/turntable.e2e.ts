@@ -1,14 +1,12 @@
 import { test, expect } from '@playwright/test';
 
 test.describe('page load', () => {
-  test('renders turntable and URL input', async ({ page }) => {
+  test('renders turntable', async ({ page }) => {
     await page.goto('/');
     await expect(page.locator('.turntable')).toBeVisible();
-    await expect(page.locator('.url-input')).toBeVisible();
-    await expect(page.locator('.url-btn')).toBeVisible();
   });
 
-  test('renders platter with grooves and label', async ({ page }) => {
+  test('renders platter with default label', async ({ page }) => {
     await page.goto('/');
     await expect(page.locator('.platter')).toBeVisible();
     await expect(page.locator('.label-title')).toHaveText('Reverse');
@@ -26,6 +24,11 @@ test.describe('page load', () => {
     await expect(labels.nth(0)).toHaveText('VOL');
     await expect(labels.nth(1)).toHaveText('PWR');
   });
+
+  test('renders mascot button', async ({ page }) => {
+    await page.goto('/');
+    await expect(page.locator('.mascot-btn')).toBeVisible();
+  });
 });
 
 test.describe('power switch', () => {
@@ -33,7 +36,6 @@ test.describe('power switch', () => {
     await page.goto('/');
     const pwrButton = page.locator('.power-track');
     await pwrButton.click();
-    // Platter should start rotating (transform changes)
     const platter = page.locator('.platter');
     const transform1 = await platter.getAttribute('style');
     await page.waitForTimeout(200);
@@ -55,12 +57,11 @@ test.describe('power switch', () => {
   });
 });
 
-test.describe('tonearm drag', () => {
-  test('tonearm starts at outer edge position', async ({ page }) => {
+test.describe('tonearm', () => {
+  test('starts at outer edge position', async ({ page }) => {
     await page.goto('/');
     const tonearm = page.locator('.tonearm');
     const style = await tonearm.getAttribute('style');
-    // Should have a positive rotation (outer edge angle ~4 degrees)
     const match = style?.match(/rotate\(([\d.]+)deg\)/);
     expect(match).toBeTruthy();
     const angle = parseFloat(match![1]);
@@ -68,7 +69,7 @@ test.describe('tonearm drag', () => {
     expect(angle).toBeLessThan(10);
   });
 
-  test('tonearm is draggable', async ({ page }) => {
+  test('is draggable', async ({ page }) => {
     await page.goto('/');
     const tonearm = page.locator('.tonearm');
     const box = await tonearm.boundingBox();
@@ -76,7 +77,6 @@ test.describe('tonearm drag', () => {
 
     const startStyle = await tonearm.getAttribute('style');
 
-    // Drag tonearm to the left (toward record center)
     await page.mouse.move(box!.x + box!.width / 2, box!.y + box!.height / 2);
     await page.mouse.down();
     await page.mouse.move(box!.x - 50, box!.y + box!.height / 2, { steps: 5 });
@@ -87,19 +87,77 @@ test.describe('tonearm drag', () => {
   });
 });
 
-test.describe('URL input', () => {
-  test('accepts text input', async ({ page }) => {
+test.describe('playlist panel', () => {
+  test('is hidden by default', async ({ page }) => {
     await page.goto('/');
-    const input = page.locator('.url-input');
-    await input.fill('https://www.youtube.com/watch?v=dQw4w9WgXcQ');
-    await expect(input).toHaveValue('https://www.youtube.com/watch?v=dQw4w9WgXcQ');
+    await expect(page.locator('.playlist-panel')).not.toBeVisible();
   });
 
-  test('LOAD button is clickable', async ({ page }) => {
+  test('opens on mascot click', async ({ page }) => {
     await page.goto('/');
-    const btn = page.locator('.url-btn');
-    await expect(btn).toBeEnabled();
-    await btn.click();
+    await page.locator('.mascot-btn').click();
+    await expect(page.locator('.playlist-panel')).toBeVisible();
+  });
+
+  test('closes on close button click', async ({ page }) => {
+    await page.goto('/');
+    await page.locator('.mascot-btn').click();
+    await expect(page.locator('.playlist-panel')).toBeVisible();
+    await page.locator('.playlist-panel .header-btn:last-child').click();
+    await expect(page.locator('.playlist-panel')).not.toBeVisible();
+  });
+
+  test('shows tracks from playlist.json', async ({ page }) => {
+    await page.goto('/');
+    await page.locator('.mascot-btn').click();
+    const rows = page.locator('.track-row');
+    await expect(rows.first()).toBeVisible();
+    expect(await rows.count()).toBeGreaterThan(0);
+  });
+
+  test('tracks have checkboxes and play buttons', async ({ page }) => {
+    await page.goto('/');
+    await page.locator('.mascot-btn').click();
+    const firstRow = page.locator('.track-row').first();
+    await expect(firstRow.locator('.track-check input')).toBeVisible();
+    await expect(firstRow.locator('.track-play')).toBeVisible();
+  });
+
+  test('checkboxes are checked by default', async ({ page }) => {
+    await page.goto('/');
+    await page.locator('.mascot-btn').click();
+    const checkbox = page.locator('.track-check input').first();
+    await expect(checkbox).toBeChecked();
+  });
+
+  test('checkbox can be unchecked', async ({ page }) => {
+    await page.goto('/');
+    await page.locator('.mascot-btn').click();
+    const checkbox = page.locator('.track-check input').first();
+    await checkbox.uncheck();
+    await expect(checkbox).not.toBeChecked();
+  });
+
+  test('play button highlights active track', async ({ page }) => {
+    await page.goto('/');
+    await page.locator('.mascot-btn').click();
+    const firstRow = page.locator('.track-row').first();
+    await firstRow.locator('.track-play').click();
+    await expect(firstRow).toHaveClass(/active/);
+  });
+
+  test('panel stays open after selecting a track', async ({ page }) => {
+    await page.goto('/');
+    await page.locator('.mascot-btn').click();
+    await page.locator('.track-play').first().click();
+    await expect(page.locator('.playlist-panel')).toBeVisible();
+  });
+
+  test('shuffle button exists', async ({ page }) => {
+    await page.goto('/');
+    await page.locator('.mascot-btn').click();
+    const shuffleBtn = page.locator('.playlist-panel .header-btn:first-child');
+    await expect(shuffleBtn).toBeVisible();
   });
 });
 
@@ -112,8 +170,7 @@ test.describe('responsive', () => {
     expect(style).toContain('scale(');
     const match = style?.match(/scale\(([\d.]+)\)/);
     expect(match).toBeTruthy();
-    const scale = parseFloat(match![1]);
-    expect(scale).toBeLessThan(1);
+    expect(parseFloat(match![1])).toBeLessThan(1);
   });
 
   test('no scaling on large viewport', async ({ page }) => {
@@ -124,5 +181,17 @@ test.describe('responsive', () => {
     const match = style?.match(/scale\(([\d.]+)\)/);
     expect(match).toBeTruthy();
     expect(parseFloat(match![1])).toBe(1);
+  });
+
+  test('playlist panel is overlay on mobile', async ({ page }) => {
+    await page.setViewportSize({ width: 400, height: 800 });
+    await page.goto('/');
+    await page.locator('.mascot-btn').click();
+    const panel = page.locator('.playlist-panel');
+    await expect(panel).toBeVisible();
+    const box = await panel.boundingBox();
+    expect(box).toBeTruthy();
+    // Should be centered (fixed position)
+    expect(box!.x).toBeGreaterThan(10);
   });
 });
