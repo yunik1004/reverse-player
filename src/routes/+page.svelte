@@ -1,6 +1,5 @@
 <script lang="ts">
   import { onMount } from 'svelte';
-  import { SvelteSet } from 'svelte/reactivity';
   import Turntable from '$lib/components/Turntable.svelte';
   import { angleToProgress, progressToAngle } from '$lib/tonearm';
   import {
@@ -26,7 +25,6 @@
 
   let groups = $state<TrackGroup[]>([]);
   let tracks = $state<FlatTrack[]>([]);
-  let checked = new SvelteSet<number>();
   let currentTrack = $state<FlatTrack | null>(null);
   let playRange = $state<PlayRange>({ start: 0, end: null });
   let showPlaylist = $state(false);
@@ -58,7 +56,6 @@
           groupVersion: g.version
         }))
       );
-      tracks.forEach((_, i) => checked.add(i));
     }
   });
 
@@ -76,7 +73,7 @@
   }
 
   function buildShuffleQueue() {
-    const indices = [...checked];
+    const indices = tracks.map((_, i) => i);
     for (let i = indices.length - 1; i > 0; i--) {
       const j = Math.floor(Math.random() * (i + 1));
       [indices[i], indices[j]] = [indices[j], indices[i]];
@@ -98,11 +95,6 @@
     shuffleMode = true;
     shuffleQueue = buildShuffleQueue();
     playNextShuffle();
-  }
-
-  function toggleCheck(index: number) {
-    if (checked.has(index)) checked.delete(index);
-    else checked.add(index);
   }
 
   function seekToArm() {
@@ -129,6 +121,32 @@
       }
     }
     return progress;
+  }
+
+  function marqueeIfOverflow(node: HTMLElement) {
+    const scroll = node.querySelector('.track-name-scroll') as HTMLElement;
+    const inner = node.querySelector('.track-name-inner') as HTMLElement;
+    if (!scroll || !inner) return;
+
+    function setup() {
+      const existing = scroll.querySelector('.track-name-dup');
+      if (existing) existing.remove();
+
+      if (inner.scrollWidth > node.clientWidth) {
+        node.classList.add('overflowing');
+        const dup = inner.cloneNode(true) as HTMLElement;
+        dup.classList.add('track-name-dup');
+        scroll.appendChild(dup);
+      } else {
+        node.classList.remove('overflowing');
+      }
+    }
+
+    setup();
+    const observer = new ResizeObserver(setup);
+    observer.observe(node);
+
+    return { destroy: () => observer.disconnect() };
   }
 
   function togglePlaylist() {
@@ -162,38 +180,29 @@
       onTogglePlaylist={togglePlaylist}
     />
 
-    {#if showPlaylist && groups.length > 0}
-      {@const trackOffset = (gi: number) =>
-        groups.slice(0, gi).reduce((s, g) => s + g.tracks.length, 0)}
+    {#if showPlaylist && tracks.length > 0}
       <div class="playlist-panel">
         <div class="playlist-header">
           <button class="header-btn" onclick={playRandom} aria-label="Shuffle">&#x21C4;</button>
           <button class="header-btn" onclick={togglePlaylist} aria-label="Close">&times;</button>
         </div>
         <div class="playlist-list">
-          {#each groups as group, gi (group.version)}
-            <div class="group-header">{group.version}</div>
-            {#each group.tracks as groupTrack, ti (groupTrack.url)}
-              {@const flatIdx = trackOffset(gi) + ti}
-              <div class="track-row" class:active={currentTrack?.url === groupTrack.url}>
-                <label class="track-check">
-                  <input
-                    type="checkbox"
-                    checked={checked.has(flatIdx)}
-                    onchange={() => toggleCheck(flatIdx)}
-                  />
-                </label>
-                <span class="track-name">{groupTrack.name}</span>
-                <button
-                  class="track-play"
-                  onclick={() => {
-                    shuffleMode = false;
-                    loadTrack(tracks[flatIdx]);
-                  }}
-                  aria-label="Play {groupTrack.name}">&#9654;</button
-                >
-              </div>
-            {/each}
+          {#each tracks as track (track.url)}
+            <div class="track-row" class:active={currentTrack?.url === track.url}>
+              <span class="track-name" use:marqueeIfOverflow>
+                <span class="track-name-scroll">
+                  <span class="track-name-inner">{track.groupVersion} | {track.name}</span>
+                </span>
+              </span>
+              <button
+                class="track-play"
+                onclick={() => {
+                  shuffleMode = false;
+                  loadTrack(track);
+                }}
+                aria-label="Play {track.name}">&#9654;</button
+              >
+            </div>
           {/each}
         </div>
       </div>
@@ -272,18 +281,6 @@
     scrollbar-color: rgba(212, 175, 55, 0.15) transparent;
   }
 
-  .group-header {
-    padding: 6px 10px 3px;
-    font-family: 'Cinzel', serif;
-    font-size: 8px;
-    font-weight: 700;
-    color: rgba(212, 175, 55, 0.4);
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-    border-bottom: 1px solid rgba(60, 42, 22, 0.2);
-    margin-bottom: 2px;
-  }
-
   .track-row {
     display: flex;
     align-items: center;
@@ -300,41 +297,38 @@
     background: rgba(40, 30, 18, 0.8);
   }
 
-  .track-check {
-    flex-shrink: 0;
-    display: flex;
-    align-items: center;
-  }
-
-  .track-check input {
-    -webkit-appearance: none;
-    -moz-appearance: none;
-    appearance: none;
-    width: 12px;
-    height: 12px;
-    border: 1px solid rgba(212, 175, 55, 0.3);
-    border-radius: 2px;
-    background: rgba(20, 16, 10, 0.8);
-    cursor: pointer;
-    margin: 0;
-    outline: none !important;
-    box-shadow: none !important;
-  }
-
-  .track-check input:checked {
-    background: rgba(212, 175, 55, 0.6);
-    border-color: rgba(212, 175, 55, 0.6);
-  }
-
   .track-name {
     flex: 1;
+    overflow: hidden;
+    white-space: nowrap;
+    min-width: 0;
+  }
+
+  :global(.track-name-scroll) {
+    display: inline-flex;
+    gap: 3em;
+  }
+
+  .track-name-inner {
+    flex-shrink: 0;
     font-family: 'Cinzel', serif;
     font-size: 9px;
     color: rgba(212, 175, 55, 0.6);
     letter-spacing: 0.03em;
-    overflow: hidden;
-    text-overflow: ellipsis;
     white-space: nowrap;
+  }
+
+  :global(.track-name.overflowing:hover .track-name-scroll) {
+    animation: marquee 8s linear infinite;
+  }
+
+  @keyframes marquee {
+    0% {
+      transform: translateX(0);
+    }
+    100% {
+      transform: translateX(calc(-50% - 1.5em));
+    }
   }
 
   .track-play {

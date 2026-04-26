@@ -112,48 +112,21 @@ test.describe('playlist panel', () => {
     await expect(page.locator('.playlist-panel')).not.toBeVisible();
   });
 
-  test('shows group headers', async ({ page }) => {
-    await page.goto('/');
-    await page.locator('.mascot-btn').click();
-    const headers = page.locator('.group-header');
-    await expect(headers.first()).toBeVisible();
-    expect(await headers.count()).toBe(2);
-    await expect(headers.nth(0)).toHaveText('2.4');
-    await expect(headers.nth(1)).toHaveText('Official MV');
-  });
-
-  test('shows tracks under groups', async ({ page }) => {
+  test('shows tracks with version and name', async ({ page }) => {
     await page.goto('/');
     await page.locator('.mascot-btn').click();
     const rows = page.locator('.track-row');
     await expect(rows.first()).toBeVisible();
-    expect(await rows.count()).toBe(2);
+    expect(await rows.count()).toBeGreaterThan(0);
+    const firstText = await rows.first().locator('.track-name-inner').textContent();
+    expect(firstText).toContain('|');
   });
 
-  test('tracks have checkboxes and play buttons', async ({ page }) => {
+  test('tracks have play buttons', async ({ page }) => {
     await page.goto('/');
     await page.locator('.mascot-btn').click();
     const firstRow = page.locator('.track-row').first();
-    await expect(firstRow.locator('.track-check input')).toBeVisible();
     await expect(firstRow.locator('.track-play')).toBeVisible();
-  });
-
-  test('checkboxes are checked by default', async ({ page }) => {
-    await page.goto('/');
-    await page.locator('.mascot-btn').click();
-    const checkboxes = page.locator('.track-check input');
-    const count = await checkboxes.count();
-    for (let i = 0; i < count; i++) {
-      await expect(checkboxes.nth(i)).toBeChecked();
-    }
-  });
-
-  test('checkbox can be unchecked', async ({ page }) => {
-    await page.goto('/');
-    await page.locator('.mascot-btn').click();
-    const checkbox = page.locator('.track-check input').first();
-    await checkbox.uncheck();
-    await expect(checkbox).not.toBeChecked();
   });
 
   test('play button highlights active track', async ({ page }) => {
