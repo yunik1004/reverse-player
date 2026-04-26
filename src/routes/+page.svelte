@@ -10,7 +10,12 @@
     getRangeProgress,
     type PlayRange
   } from '$lib/youtube';
-  import type { Track } from '$lib/types';
+  import type { Track, TrackGroup } from '$lib/types';
+
+  interface FlatTrack extends Track {
+    groupCover?: string;
+    groupVersion: string;
+  }
 
   let volume = $state(100);
   let player = $state.raw<YT.Player | null>(null);
@@ -19,9 +24,10 @@
   let armOnRecord = $state(false);
   let tonearmAngle = $state(progressToAngle(0));
 
-  let playlist = $state<Track[]>([]);
+  let groups = $state<TrackGroup[]>([]);
+  let tracks = $state<FlatTrack[]>([]);
   let checked = new SvelteSet<number>();
-  let currentTrack = $state<Track | null>(null);
+  let currentTrack = $state<FlatTrack | null>(null);
   let playRange = $state<PlayRange>({ start: 0, end: null });
   let showPlaylist = $state(false);
   let shuffleMode = $state(false);
@@ -43,12 +49,20 @@
 
     const res = await fetch('/playlist.json');
     if (res.ok) {
-      playlist = await res.json();
-      playlist.forEach((_, i) => checked.add(i));
+      groups = await res.json();
+      tracks = groups.flatMap((g) =>
+        g.tracks.map((t) => ({
+          ...t,
+          cover: t.cover ?? g.cover,
+          groupCover: g.cover,
+          groupVersion: g.version
+        }))
+      );
+      tracks.forEach((_, i) => checked.add(i));
     }
   });
 
-  function loadTrack(track: Track) {
+  function loadTrack(track: FlatTrack) {
     currentTrack = track;
     playRange = { start: track.start ?? 0, end: track.end ?? null };
     const id = extractVideoId(track.url);
@@ -77,7 +91,7 @@
     if (shuffleQueue.length === 0) return;
     const idx = shuffleQueue[0];
     shuffleQueue = shuffleQueue.slice(1);
-    loadTrack(playlist[idx]);
+    loadTrack(tracks[idx]);
   }
 
   function playRandom() {
@@ -148,28 +162,38 @@
       onTogglePlaylist={togglePlaylist}
     />
 
-    {#if showPlaylist && playlist.length > 0}
+    {#if showPlaylist && groups.length > 0}
+      {@const trackOffset = (gi: number) =>
+        groups.slice(0, gi).reduce((s, g) => s + g.tracks.length, 0)}
       <div class="playlist-panel">
         <div class="playlist-header">
           <button class="header-btn" onclick={playRandom} aria-label="Shuffle">&#x21C4;</button>
           <button class="header-btn" onclick={togglePlaylist} aria-label="Close">&times;</button>
         </div>
         <div class="playlist-list">
-          {#each playlist as track, i (track.url)}
-            <div class="track-row" class:active={currentTrack?.url === track.url}>
-              <label class="track-check">
-                <input type="checkbox" checked={checked.has(i)} onchange={() => toggleCheck(i)} />
-              </label>
-              <span class="track-name">{track.name}</span>
-              <button
-                class="track-play"
-                onclick={() => {
-                  shuffleMode = false;
-                  loadTrack(track);
-                }}
-                aria-label="Play {track.name}">&#9654;</button
-              >
-            </div>
+          {#each groups as group, gi (group.version)}
+            <div class="group-header">{group.version}</div>
+            {#each group.tracks as groupTrack, ti (groupTrack.url)}
+              {@const flatIdx = trackOffset(gi) + ti}
+              <div class="track-row" class:active={currentTrack?.url === groupTrack.url}>
+                <label class="track-check">
+                  <input
+                    type="checkbox"
+                    checked={checked.has(flatIdx)}
+                    onchange={() => toggleCheck(flatIdx)}
+                  />
+                </label>
+                <span class="track-name">{groupTrack.name}</span>
+                <button
+                  class="track-play"
+                  onclick={() => {
+                    shuffleMode = false;
+                    loadTrack(tracks[flatIdx]);
+                  }}
+                  aria-label="Play {groupTrack.name}">&#9654;</button
+                >
+              </div>
+            {/each}
           {/each}
         </div>
       </div>
@@ -248,6 +272,18 @@
     scrollbar-color: rgba(212, 175, 55, 0.15) transparent;
   }
 
+  .group-header {
+    padding: 6px 10px 3px;
+    font-family: 'Cinzel', serif;
+    font-size: 8px;
+    font-weight: 700;
+    color: rgba(212, 175, 55, 0.4);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    border-bottom: 1px solid rgba(60, 42, 22, 0.2);
+    margin-bottom: 2px;
+  }
+
   .track-row {
     display: flex;
     align-items: center;
@@ -271,10 +307,23 @@
   }
 
   .track-check input {
-    accent-color: #d4af37;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
     width: 12px;
     height: 12px;
+    border: 1px solid rgba(212, 175, 55, 0.3);
+    border-radius: 2px;
+    background: rgba(20, 16, 10, 0.8);
     cursor: pointer;
+    margin: 0;
+    outline: none !important;
+    box-shadow: none !important;
+  }
+
+  .track-check input:checked {
+    background: rgba(212, 175, 55, 0.6);
+    border-color: rgba(212, 175, 55, 0.6);
   }
 
   .track-name {

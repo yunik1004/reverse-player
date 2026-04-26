@@ -1,7 +1,7 @@
 // Tonearm geometry constants
 // Pivot at turntable coords (350, 60), platter center (198, 192)
 const R_OUTER = 142; // platter outer edge radius
-const R_INNER = 43; // label radius
+const R_INNER = 75; // innermost groove radius (just outside label)
 const PIVOT_DIST = 201; // pivot to platter center distance
 const ARM_LEN = 192; // effective tonearm length
 const GAMMA = 46.3; // pivot-to-center direction angle (degrees)

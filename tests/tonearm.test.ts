@@ -9,7 +9,7 @@ describe('progressToAngle', () => {
 
   it('returns inner edge angle at progress 1', () => {
     const angle = progressToAngle(1);
-    expect(angle).toBeCloseTo(34, 0);
+    expect(angle).toBeCloseTo(24, 0);
   });
 
   it('is monotonically increasing (outer to inner)', () => {

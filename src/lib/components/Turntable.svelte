@@ -243,10 +243,25 @@
         </button>
       </div>
     </div>
+    <span class="brand-name">Regulus</span>
   </div>
 </div>
 
 <style>
+  @import url('https://fonts.googleapis.com/css2?family=Great+Vibes&display=swap');
+
+  .brand-name {
+    position: absolute;
+    bottom: 20px;
+    left: 24px;
+    font-family: 'Great Vibes', cursive;
+    font-size: 26px;
+    color: #d4af37;
+    z-index: 2;
+    pointer-events: none;
+    opacity: 0.7;
+  }
+
   .turntable-wrapper {
     width: 500px;
     height: 420px;
