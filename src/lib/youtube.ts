@@ -90,11 +90,16 @@ export function playFromProgress(
     return;
   }
 
+  player.mute();
   player.playVideo();
   const trySeek = () => {
     const duration = getEffectiveDuration(player, range);
     if (duration > 0) {
       player.seekTo(range.start + progress * duration, true);
+      setTimeout(() => {
+        player.unMute();
+        player.setVolume(volume);
+      }, 300);
     } else {
       setTimeout(trySeek, 100);
     }
