@@ -144,11 +144,20 @@ test.describe('playlist panel', () => {
     await expect(page.locator('.playlist-panel')).toBeVisible();
   });
 
-  test('shuffle button exists', async ({ page }) => {
+  test('play mode button cycles through modes', async ({ page }) => {
     await page.goto('/');
     await page.locator('.mascot-btn').click();
-    const shuffleBtn = page.locator('.playlist-panel .header-btn:first-child');
-    await expect(shuffleBtn).toBeVisible();
+    const modeBtn = page.locator('.mode-btn');
+    await expect(modeBtn).toBeVisible();
+    await expect(modeBtn).toHaveText('\u2192');
+    await modeBtn.click();
+    await expect(modeBtn).toHaveText('\u21C4');
+    await modeBtn.click();
+    await expect(modeBtn).toHaveText('\u21BB');
+    await modeBtn.click();
+    await expect(modeBtn).toHaveText('1');
+    await modeBtn.click();
+    await expect(modeBtn).toHaveText('\u2192');
   });
 });
 

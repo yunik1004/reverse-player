@@ -28,7 +28,7 @@
   let currentTrack = $state<FlatTrack | null>(null);
   let playRange = $state<PlayRange>({ start: 0, end: null });
   let showPlaylist = $state(false);
-  let shuffleMode = $state(false);
+  let playMode = $state<'sequential' | 'shuffle' | 'repeat' | 'once'>('sequential');
   let shuffleQueue = $state<number[]>([]);
 
   onMount(async () => {
@@ -37,11 +37,7 @@
         playerReady = true;
       },
       onEnded: () => {
-        if (shuffleMode) {
-          playNextShuffle();
-        } else {
-          player?.pauseVideo();
-        }
+        playNext();
       }
     });
 
@@ -81,20 +77,49 @@
     return indices;
   }
 
-  function playNextShuffle() {
-    if (shuffleQueue.length === 0) {
+  function cyclePlayMode() {
+    if (playMode === 'sequential') {
+      playMode = 'shuffle';
       shuffleQueue = buildShuffleQueue();
+    } else if (playMode === 'shuffle') {
+      playMode = 'repeat';
+      shuffleQueue = [];
+    } else if (playMode === 'repeat') {
+      playMode = 'once';
+    } else {
+      playMode = 'sequential';
     }
-    if (shuffleQueue.length === 0) return;
-    const idx = shuffleQueue[0];
-    shuffleQueue = shuffleQueue.slice(1);
-    loadTrack(tracks[idx]);
   }
 
-  function playRandom() {
-    shuffleMode = true;
-    shuffleQueue = buildShuffleQueue();
-    playNextShuffle();
+  const playModeIcon = $derived(
+    { sequential: '\u2192', shuffle: '\u21C4', repeat: '\u21BB', once: '1' }[playMode]
+  );
+
+  function playNext() {
+    if (tracks.length === 0) return;
+
+    if (playMode === 'repeat') {
+      if (currentTrack) loadTrack(currentTrack);
+      return;
+    }
+
+    if (playMode === 'once') {
+      player?.pauseVideo();
+      return;
+    }
+
+    if (playMode === 'shuffle') {
+      if (shuffleQueue.length === 0) {
+        shuffleQueue = buildShuffleQueue();
+      }
+      const idx = shuffleQueue[0];
+      shuffleQueue = shuffleQueue.slice(1);
+      loadTrack(tracks[idx]);
+    } else {
+      const currentIdx = currentTrack ? tracks.indexOf(currentTrack) : -1;
+      const nextIdx = (currentIdx + 1) % tracks.length;
+      loadTrack(tracks[nextIdx]);
+    }
   }
 
   function seekToArm() {
@@ -112,11 +137,7 @@
     if (progress !== null && playRange.end !== null) {
       const current = player.getCurrentTime?.() ?? 0;
       if (current >= playRange.end) {
-        if (shuffleMode) {
-          playNextShuffle();
-        } else {
-          player.pauseVideo();
-        }
+        playNext();
         return 1;
       }
     }
@@ -180,30 +201,31 @@
       onTogglePlaylist={togglePlaylist}
     />
 
-    {#if showPlaylist && tracks.length > 0}
-      <div class="playlist-panel">
-        <div class="playlist-header">
-          <button class="header-btn" onclick={playRandom} aria-label="Shuffle">&#x21C4;</button>
-          <button class="header-btn" onclick={togglePlaylist} aria-label="Close">&times;</button>
-        </div>
-        <div class="playlist-list">
-          {#each tracks as track (track.url)}
-            <div class="track-row" class:active={currentTrack?.url === track.url}>
-              <span class="track-name" use:marqueeIfOverflow>
-                <span class="track-name-scroll">
-                  <span class="track-name-inner">{track.groupVersion} | {track.name}</span>
+    {#if tracks.length > 0}
+      <div class="playlist-panel" class:open={showPlaylist}>
+        <div class="playlist-inner">
+          <div class="playlist-header">
+            <button class="mode-btn" onclick={cyclePlayMode} aria-label="Play mode"
+              >{playModeIcon}</button
+            >
+            <button class="header-btn" onclick={togglePlaylist} aria-label="Close">&times;</button>
+          </div>
+          <div class="playlist-list">
+            {#each tracks as track (track.url)}
+              <div class="track-row" class:active={currentTrack?.url === track.url}>
+                <span class="track-name" use:marqueeIfOverflow>
+                  <span class="track-name-scroll">
+                    <span class="track-name-inner">{track.groupVersion} | {track.name}</span>
+                  </span>
                 </span>
-              </span>
-              <button
-                class="track-play"
-                onclick={() => {
-                  shuffleMode = false;
-                  loadTrack(track);
-                }}
-                aria-label="Play {track.name}">&#9654;</button
-              >
-            </div>
-          {/each}
+                <button
+                  class="track-play"
+                  onclick={() => loadTrack(track)}
+                  aria-label="Play {track.name}">&#9654;</button
+                >
+              </div>
+            {/each}
+          </div>
         </div>
       </div>
     {/if}
@@ -243,7 +265,19 @@
 
   /* Playlist panel */
   .playlist-panel {
+    width: 0;
+    overflow: hidden;
+    transition: width 0.3s ease;
+    direction: rtl;
+  }
+
+  .playlist-panel.open {
     width: 240px;
+  }
+
+  .playlist-inner {
+    width: 240px;
+    direction: ltr;
     max-height: 420px;
     display: flex;
     flex-direction: column;
@@ -258,7 +292,25 @@
     padding: 8px 10px;
     border-bottom: 1px solid rgba(60, 42, 22, 0.3);
     display: flex;
-    justify-content: flex-end;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .mode-btn {
+    background: rgba(212, 175, 55, 0.08);
+    border: 1px solid rgba(60, 42, 22, 0.4);
+    border-radius: 3px;
+    color: rgba(212, 175, 55, 0.7);
+    font-size: 12px;
+    cursor: pointer;
+    padding: 2px 0;
+    width: 24px;
+    text-align: center;
+  }
+
+  .mode-btn:hover {
+    color: rgba(212, 175, 55, 0.9);
+    border-color: rgba(212, 175, 55, 0.5);
   }
 
   .header-btn {
@@ -351,10 +403,25 @@
       top: 50%;
       left: 50%;
       transform: translate(-50%, -50%);
+      width: 0;
+      max-height: 70vh;
+      z-index: 100;
+      transition:
+        width 0.3s ease,
+        opacity 0.3s ease;
+      opacity: 0;
+    }
+
+    .playlist-panel.open {
+      width: 90vw;
+      max-width: 400px;
+      opacity: 1;
+    }
+
+    .playlist-inner {
       width: 90vw;
       max-width: 400px;
       max-height: 70vh;
-      z-index: 100;
     }
   }
 
