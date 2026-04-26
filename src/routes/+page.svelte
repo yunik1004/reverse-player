@@ -214,6 +214,7 @@
       bind:volume
       coverUrl={currentTrack?.cover ?? ''}
       chibis={activeChibis}
+      bpm={currentTrack?.bpm}
       {getPlaybackProgress}
       onSeek={seekToArm}
       onPause={pause}

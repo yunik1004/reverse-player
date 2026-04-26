@@ -1,5 +1,6 @@
 <script lang="ts">
   import { progressToAngle, angleToProgress, TIP_OFFSET } from '$lib/tonearm';
+  import { ChibiDanceController } from '$lib/chibi-dance';
   import type { Character } from '$lib/types';
   import mascot from '$lib/assets/Regulus_Udimo_Sticker.webp';
   let {
@@ -9,6 +10,7 @@
     volume = $bindable(50),
     coverUrl = '',
     chibis = [],
+    bpm,
     getPlaybackProgress,
     onSeek,
     onPause,
@@ -20,6 +22,7 @@
     volume: number;
     coverUrl?: string;
     chibis?: Character[];
+    bpm?: number;
     getPlaybackProgress: () => number | null;
     onSeek: () => void;
     onPause: () => void;
@@ -29,11 +32,47 @@
   let spinning = $state(false);
   let platterAngle = 0;
   let platterEl: HTMLDivElement;
+  let tonearmEl: SVGSVGElement;
+  let visualArmAngle = progressToAngle(0);
   let animationId: number;
   let draggingArm = $state(false);
   let faderDragging = $state(false);
   let turntableEl: HTMLDivElement;
   let scale = $state(1);
+  let chibiEls: HTMLElement[] = [];
+  const dancer = new ChibiDanceController();
+
+  function trackChibi(node: HTMLElement) {
+    chibiEls.push(node);
+    dancer.setElements([...chibiEls]);
+    return {
+      destroy() {
+        chibiEls = chibiEls.filter((el) => el !== node);
+        dancer.setElements([...chibiEls]);
+        if (chibiEls.length === 0) dancer.stop();
+      }
+    };
+  }
+
+  $effect(() => {
+    if (chibis.length === 0) return;
+    if (motorOn && armOnRecord) {
+      dancer.startDance(bpm ?? 120);
+    } else {
+      dancer.startIdle(bpm);
+    }
+  });
+
+  $effect(() => {
+    return () => dancer.destroy();
+  });
+
+  // Sync visualArmAngle when parent changes tonearmAngle (e.g. loadTrack)
+  // This only fires on user-initiated changes, not during spin()
+  $effect(() => {
+    visualArmAngle = tonearmAngle;
+    checkArmOnRecord(tonearmAngle);
+  });
 
   const ANGLE_MIN = progressToAngle(0);
   const ANGLE_MAX = progressToAngle(1);
@@ -70,9 +109,9 @@
     }
   });
 
-  // Arm on/off record detection
-  $effect(() => {
-    const onRecord = tonearmAngle >= ANGLE_MIN - 1;
+  // Arm on/off record detection (called from spin and drag, not from $effect)
+  function checkArmOnRecord(angle: number) {
+    const onRecord = angle >= ANGLE_MIN - 1;
     if (onRecord !== armOnRecord) {
       armOnRecord = onRecord;
       if (!draggingArm && motorOn) {
@@ -80,9 +119,9 @@
         else onPause();
       }
     }
-  });
+  }
 
-  // Animation loop - throttle tonearm updates to avoid constant re-renders
+  // Animation loop — all DOM updates are direct, bypassing Svelte reactivity
   let spinFrameCount = 0;
 
   function spin() {
@@ -90,13 +129,13 @@
     if (platterEl) platterEl.style.transform = `rotate(${platterAngle}deg)`;
 
     spinFrameCount++;
-    // Only update tonearmAngle every 10 frames (~6fps) to reduce Svelte re-renders
     if (spinFrameCount % 10 === 0 && !draggingArm && armOnRecord) {
       const progress = getPlaybackProgress();
       if (progress !== null) {
-        const armProgress = angleToProgress(tonearmAngle);
+        const armProgress = angleToProgress(visualArmAngle);
         if (Math.abs(progress - armProgress) < 0.03) {
-          tonearmAngle = progressToAngle(progress);
+          visualArmAngle = progressToAngle(progress);
+          if (tonearmEl) tonearmEl.style.transform = `rotate(${visualArmAngle}deg)`;
         }
       }
     }
@@ -124,10 +163,13 @@
     const pivot = getPivotScreen();
     const mouseAngle = (Math.atan2(e.clientX - pivot.x, e.clientY - pivot.y) * 180) / Math.PI;
     tonearmAngle = Math.max(ANGLE_MIN, Math.min(ANGLE_MAX, -mouseAngle - TIP_OFFSET));
+    visualArmAngle = tonearmAngle;
+    checkArmOnRecord(tonearmAngle);
   }
 
   function onArmUp() {
     draggingArm = false;
+    visualArmAngle = tonearmAngle;
     if (motorOn && armOnRecord) onSeek();
   }
 
@@ -183,6 +225,7 @@
     <!-- svelte-ignore a11y_no_static_element_interactions -->
     <svg
       class="tonearm"
+      bind:this={tonearmEl}
       width="50"
       height="220"
       viewBox="0 0 50 220"
@@ -255,7 +298,9 @@
     {#if chibis.length > 0}
       <div class="chibi-stage">
         {#each chibis as char (char.name)}
-          <img class="chibi" src={char.chibi} alt={char.name} />
+          <div class="chibi-wrap" use:trackChibi>
+            <img class="chibi" src={char.chibi} alt={char.name} />
+          </div>
         {/each}
       </div>
     {/if}
@@ -350,6 +395,7 @@
     align-items: center;
     justify-content: center;
     z-index: 1;
+    will-change: transform;
   }
 
   .vinyl-sheen {
@@ -473,6 +519,12 @@
     pointer-events: none;
   }
 
+  .chibi-wrap {
+    transform-origin: center bottom;
+    will-change: transform;
+    transition: rotate 0.3s ease;
+  }
+
   .chibi {
     height: 80px;
     object-fit: contain;
@@ -487,6 +539,7 @@
     z-index: 30;
     transform-origin: 25px 12px;
     filter: drop-shadow(2px 3px 4px rgba(0, 0, 0, 0.6));
+    will-change: transform;
   }
 
   .controls {
