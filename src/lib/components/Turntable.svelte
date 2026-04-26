@@ -1,13 +1,14 @@
 <script lang="ts">
   import { progressToAngle, angleToProgress, TIP_OFFSET } from '$lib/tonearm';
+  import type { Character } from '$lib/types';
   import mascot from '$lib/assets/Regulus_Udimo_Sticker.webp';
-
   let {
     motorOn = $bindable(false),
     armOnRecord = $bindable(false),
     tonearmAngle = $bindable(0),
     volume = $bindable(50),
     coverUrl = '',
+    chibis = [],
     getPlaybackProgress,
     onSeek,
     onPause,
@@ -18,6 +19,7 @@
     tonearmAngle: number;
     volume: number;
     coverUrl?: string;
+    chibis?: Character[];
     getPlaybackProgress: () => number | null;
     onSeek: () => void;
     onPause: () => void;
@@ -25,7 +27,8 @@
   } = $props();
 
   let spinning = $state(false);
-  let platterAngle = $state(0);
+  let platterAngle = 0;
+  let platterEl: HTMLDivElement;
   let animationId: number;
   let draggingArm = $state(false);
   let faderDragging = $state(false);
@@ -79,11 +82,16 @@
     }
   });
 
-  // Animation loop
+  // Animation loop - throttle tonearm updates to avoid constant re-renders
+  let spinFrameCount = 0;
+
   function spin() {
     platterAngle += 0.5;
+    if (platterEl) platterEl.style.transform = `rotate(${platterAngle}deg)`;
 
-    if (!draggingArm && armOnRecord) {
+    spinFrameCount++;
+    // Only update tonearmAngle every 10 frames (~6fps) to reduce Svelte re-renders
+    if (spinFrameCount % 10 === 0 && !draggingArm && armOnRecord) {
       const progress = getPlaybackProgress();
       if (progress !== null) {
         const armProgress = angleToProgress(tonearmAngle);
@@ -153,7 +161,7 @@
     </button>
     <div class="metal-plate"></div>
 
-    <div class="platter" style="transform: rotate({platterAngle}deg)">
+    <div class="platter" bind:this={platterEl}>
       <div class="vinyl-sheen"></div>
       {#each Array.from({ length: 24 }, (_, i) => 280 - i * 6) as size (size)}
         <div class="groove" style="width: {size}px; height: {size}px"></div>
@@ -244,6 +252,13 @@
       </div>
     </div>
     <span class="brand-name">Regulus</span>
+    {#if chibis.length > 0}
+      <div class="chibi-stage">
+        {#each chibis as char (char.name)}
+          <img class="chibi" src={char.chibi} alt={char.name} />
+        {/each}
+      </div>
+    {/if}
   </div>
 </div>
 
@@ -443,6 +458,26 @@
   .mascot {
     width: 50px;
     opacity: 0.85;
+  }
+
+  .chibi-stage {
+    position: absolute;
+    bottom: 12px;
+    left: 100px;
+    right: 80px;
+    display: flex;
+    justify-content: center;
+    align-items: flex-end;
+    gap: 4px;
+    z-index: 2;
+    pointer-events: none;
+  }
+
+  .chibi {
+    height: 80px;
+    object-fit: contain;
+    filter: drop-shadow(2px 0 0 #f5e6c8) drop-shadow(-2px 0 0 #f5e6c8) drop-shadow(0 2px 0 #f5e6c8)
+      drop-shadow(0 -2px 0 #f5e6c8);
   }
 
   .tonearm {

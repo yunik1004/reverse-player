@@ -9,11 +9,12 @@
     getRangeProgress,
     type PlayRange
   } from '$lib/youtube';
-  import type { Track, TrackGroup } from '$lib/types';
+  import type { Track, TrackGroup, Character } from '$lib/types';
 
   interface FlatTrack extends Track {
     groupCover?: string;
     groupVersion: string;
+    groupCharacters: string[];
   }
 
   let volume = $state(100);
@@ -25,9 +26,11 @@
 
   let groups = $state<TrackGroup[]>([]);
   let tracks = $state<FlatTrack[]>([]);
+  let characters = $state<Character[]>([]);
   let currentTrack = $state<FlatTrack | null>(null);
   let playRange = $state<PlayRange>({ start: 0, end: null });
   let showPlaylist = $state(false);
+  let danceEnabled = $state(false);
   let playMode = $state<'sequential' | 'shuffle' | 'repeat' | 'once'>('sequential');
   let shuffleQueue = $state<number[]>([]);
 
@@ -41,17 +44,24 @@
       }
     });
 
-    const res = await fetch('/playlist.json');
-    if (res.ok) {
-      groups = await res.json();
+    const [playlistRes, charsRes] = await Promise.all([
+      fetch('/playlist.json'),
+      fetch('/characters.json')
+    ]);
+    if (playlistRes.ok) {
+      groups = await playlistRes.json();
       tracks = groups.flatMap((g) =>
         g.tracks.map((t) => ({
           ...t,
           cover: t.cover ?? g.cover,
           groupCover: g.cover,
-          groupVersion: g.version
+          groupVersion: g.version,
+          groupCharacters: g.characters
         }))
       );
+    }
+    if (charsRes.ok) {
+      characters = await charsRes.json();
     }
   });
 
@@ -121,6 +131,14 @@
       loadTrack(tracks[nextIdx]);
     }
   }
+
+  const activeChibis = $derived(
+    danceEnabled && currentTrack
+      ? currentTrack.groupCharacters
+          .map((name) => characters.find((c) => c.name === name))
+          .filter((c): c is Character => !!c)
+      : []
+  );
 
   function seekToArm() {
     if (!player || !playerReady) return;
@@ -195,6 +213,7 @@
       bind:tonearmAngle
       bind:volume
       coverUrl={currentTrack?.cover ?? ''}
+      chibis={activeChibis}
       {getPlaybackProgress}
       onSeek={seekToArm}
       onPause={pause}
@@ -205,9 +224,15 @@
       <div class="playlist-panel" class:open={showPlaylist}>
         <div class="playlist-inner">
           <div class="playlist-header">
-            <button class="mode-btn" onclick={cyclePlayMode} aria-label="Play mode"
-              >{playModeIcon}</button
-            >
+            <div class="header-left">
+              <button class="mode-btn" onclick={cyclePlayMode} aria-label="Play mode"
+                >{playModeIcon}</button
+              >
+              <label class="dance-toggle">
+                <input type="checkbox" bind:checked={danceEnabled} />
+                <span class="dance-label">dance</span>
+              </label>
+            </div>
             <button class="header-btn" onclick={togglePlaylist} aria-label="Close">&times;</button>
           </div>
           <div class="playlist-list">
@@ -311,6 +336,46 @@
   .mode-btn:hover {
     color: rgba(212, 175, 55, 0.9);
     border-color: rgba(212, 175, 55, 0.5);
+  }
+
+  .header-left {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .dance-toggle {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    cursor: pointer;
+  }
+
+  .dance-toggle input {
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+    width: 12px;
+    height: 12px;
+    border: 1px solid rgba(212, 175, 55, 0.3);
+    border-radius: 2px;
+    background: rgba(20, 16, 10, 0.8);
+    cursor: pointer;
+    margin: 0;
+    outline: none !important;
+    box-shadow: none !important;
+  }
+
+  .dance-toggle input:checked {
+    background: rgba(212, 175, 55, 0.6);
+    border-color: rgba(212, 175, 55, 0.6);
+  }
+
+  .dance-label {
+    font-family: 'Cinzel', serif;
+    font-size: 8px;
+    color: rgba(212, 175, 55, 0.4);
+    letter-spacing: 0.05em;
   }
 
   .header-btn {

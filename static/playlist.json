@@ -24,11 +24,12 @@
   {
     "version": "Ver 1.8",
     "cover": "https://img.youtu.be/vi/f2fCNclSgW0?si=QPZdcjbsScAmvjWR/hqdefault.jpg",
-    "characters": [],
+    "characters": ["Windsong", "Vila", "Avgust"],
     "tracks": [
       {
         "url": "https://youtu.be/CGdH5kmzZ6g?si=zKXWBzId4Jpyd0EP",
-        "name": "안녕, 라야시키"
+        "name": "안녕, 라야시키",
+        "bpm": 108
       }
     ]
   },
