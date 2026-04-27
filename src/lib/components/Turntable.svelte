@@ -1,7 +1,6 @@
 <script lang="ts">
   import { progressToAngle, TIP_OFFSET } from '$lib/tonearm';
   import { ChibiDanceController } from '$lib/chibi-dance';
-  import type { Character } from '$lib/types';
   import mascot from '$lib/assets/Regulus_Udimo_Sticker.webp';
   import brandSig from '$lib/assets/Regulus_Signature.webp';
   let {
@@ -10,8 +9,6 @@
     tonearmAngle = $bindable(0),
     volume = $bindable(50),
     coverUrl = '',
-    chibis = [],
-    bpm,
     danceEnabled = false,
     getPlaybackProgress,
     onSeek,
@@ -23,8 +20,6 @@
     tonearmAngle: number;
     volume: number;
     coverUrl?: string;
-    chibis?: Character[];
-    bpm?: number;
     danceEnabled?: boolean;
     getPlaybackProgress: () => number | null;
     onSeek: (angle: number) => void;
@@ -42,38 +37,9 @@
   let faderDragging = $state(false);
   let turntableEl: HTMLDivElement;
   let scale = $state(1);
-  let chibiEls: HTMLElement[] = [];
-  const dancer = new ChibiDanceController();
   let mascotEl: HTMLImageElement;
   const mascotDancer = new ChibiDanceController();
 
-  function trackChibi(node: HTMLElement) {
-    chibiEls.push(node);
-    dancer.setElements([...chibiEls]);
-    return {
-      destroy() {
-        chibiEls = chibiEls.filter((el) => el !== node);
-        dancer.setElements([...chibiEls]);
-        if (chibiEls.length === 0) dancer.stop();
-      }
-    };
-  }
-
-  $effect(() => {
-    if (chibis.length === 0) return;
-    dancer.setChibiSrcs(chibis.map((c) => c.chibi));
-    if (motorOn && armOnRecord) {
-      dancer.startDance(bpm ?? 120);
-    } else {
-      dancer.startIdle(bpm);
-    }
-  });
-
-  $effect(() => {
-    return () => dancer.destroy();
-  });
-
-  // 마스코트 숨쉬기/댄스
   $effect(() => {
     if (!mascotEl) return;
     mascotDancer.setElements([mascotEl]);
@@ -82,9 +48,9 @@
       return;
     }
     if (motorOn && armOnRecord) {
-      mascotDancer.startDance(bpm ?? 120);
+      mascotDancer.startDance(120);
     } else {
-      mascotDancer.startIdle(bpm);
+      mascotDancer.startIdle();
     }
   });
 
@@ -339,21 +305,10 @@
       </div>
     </div>
     <img class="brand-name" src={brandSig} alt="Regulus" />
-    {#if chibis.length > 0}
-      <div class="chibi-stage">
-        {#each chibis as char (char.name)}
-          <div class="chibi-wrap" use:trackChibi>
-            <img class="chibi" src={char.chibi[0]} alt={char.name} />
-          </div>
-        {/each}
-      </div>
-    {/if}
   </div>
 </div>
 
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=Great+Vibes&display=swap');
-
   .brand-name {
     position: absolute;
     bottom: 16px;
@@ -547,31 +502,6 @@
     width: 50px;
     opacity: 0.85;
     transform-origin: center bottom;
-  }
-
-  .chibi-stage {
-    position: absolute;
-    bottom: 12px;
-    left: 100px;
-    right: 80px;
-    display: flex;
-    justify-content: center;
-    align-items: flex-end;
-    gap: 4px;
-    z-index: 2;
-    pointer-events: none;
-  }
-
-  .chibi-wrap {
-    transform-origin: center center;
-    will-change: transform;
-  }
-
-  .chibi {
-    height: 80px;
-    object-fit: contain;
-    filter: drop-shadow(2px 0 0 #f5e6c8) drop-shadow(-2px 0 0 #f5e6c8) drop-shadow(0 2px 0 #f5e6c8)
-      drop-shadow(0 -2px 0 #f5e6c8);
   }
 
   .tonearm {

@@ -9,12 +9,11 @@
     getRangeProgress,
     type PlayRange
   } from '$lib/youtube';
-  import type { Track, TrackGroup, Character } from '$lib/types';
+  import type { Track, TrackGroup } from '$lib/types';
 
   interface FlatTrack extends Track {
     groupCover?: string;
     groupVersion: string;
-    groupCharacters: string[];
   }
 
   let volume = $state(100);
@@ -26,7 +25,6 @@
 
   let groups = $state<TrackGroup[]>([]);
   let tracks = $state<FlatTrack[]>([]);
-  let characters = $state<Character[]>([]);
   let currentTrack = $state<FlatTrack | null>(null);
   let playRange = $state<PlayRange>({ start: 0, end: null });
   let showPlaylist = $state(false);
@@ -52,8 +50,7 @@
           ...t,
           cover: t.cover ?? g.cover,
           groupCover: g.cover,
-          groupVersion: g.version,
-          groupCharacters: g.characters ?? []
+          groupVersion: g.version
         }))
       );
     }
@@ -125,14 +122,6 @@
       loadTrack(tracks[nextIdx]);
     }
   }
-
-  const activeChibis = $derived(
-    danceEnabled && currentTrack
-      ? currentTrack.groupCharacters
-          .map((name) => characters.find((c) => c.name === name))
-          .filter((c): c is Character => !!c)
-      : []
-  );
 
   function seekToArm(angle: number) {
     if (!player || !playerReady) return;
@@ -207,8 +196,6 @@
       bind:tonearmAngle
       bind:volume
       coverUrl={currentTrack?.cover ?? ''}
-      chibis={activeChibis}
-      bpm={currentTrack?.bpm}
       {danceEnabled}
       {getPlaybackProgress}
       onSeek={seekToArm}

@@ -161,6 +161,56 @@ test.describe('playlist panel', () => {
   });
 });
 
+test.describe('dance toggle', () => {
+  test('dance button exists in playlist header', async ({ page }) => {
+    await page.goto('/');
+    await page.locator('.mascot-btn').click();
+    const danceBtn = page.locator('[aria-label="Toggle dance"]');
+    await expect(danceBtn).toBeVisible();
+    await expect(danceBtn).toHaveText('dance');
+  });
+
+  test('dance button toggles active state', async ({ page }) => {
+    await page.goto('/');
+    await page.locator('.mascot-btn').click();
+    const danceBtn = page.locator('[aria-label="Toggle dance"]');
+    await expect(danceBtn).not.toHaveClass(/active/);
+    await danceBtn.click();
+    await expect(danceBtn).toHaveClass(/active/);
+    await danceBtn.click();
+    await expect(danceBtn).not.toHaveClass(/active/);
+  });
+
+  test('mascot animates when dance enabled', async ({ page }) => {
+    await page.goto('/');
+    await page.locator('.mascot-btn').click();
+    await page.locator('[aria-label="Toggle dance"]').click();
+    await page.waitForTimeout(1000);
+    const transform = await page.locator('.mascot').evaluate((el) => el.style.transform);
+    expect(transform).not.toBe('');
+  });
+
+  test('mascot does not animate when dance disabled', async ({ page }) => {
+    await page.goto('/');
+    await page.waitForTimeout(500);
+    const transform = await page.locator('.mascot').evaluate((el) => el.style.transform);
+    expect(transform).toBe('');
+  });
+});
+
+test.describe('album covers', () => {
+  test('loads local album cover on track select', async ({ page }) => {
+    await page.goto('/');
+    await page.locator('.mascot-btn').click();
+    await page.locator('.track-play').first().click();
+    await page.waitForTimeout(300);
+    const cover = page.locator('.label-cover');
+    await expect(cover).toBeVisible();
+    const src = await cover.getAttribute('src');
+    expect(src).toContain('/album/');
+  });
+});
+
 test.describe('responsive', () => {
   test('scales down on small viewport', async ({ page }) => {
     await page.setViewportSize({ width: 400, height: 800 });
