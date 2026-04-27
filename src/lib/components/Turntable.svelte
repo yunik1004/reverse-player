@@ -1,8 +1,9 @@
 <script lang="ts">
-  import { progressToAngle, angleToProgress, TIP_OFFSET } from '$lib/tonearm';
+  import { progressToAngle, TIP_OFFSET } from '$lib/tonearm';
   import { ChibiDanceController } from '$lib/chibi-dance';
   import type { Character } from '$lib/types';
   import mascot from '$lib/assets/Regulus_Udimo_Sticker.webp';
+  import brandSig from '$lib/assets/Regulus_Signature.webp';
   let {
     motorOn = $bindable(false),
     armOnRecord = $bindable(false),
@@ -24,7 +25,7 @@
     chibis?: Character[];
     bpm?: number;
     getPlaybackProgress: () => number | null;
-    onSeek: () => void;
+    onSeek: (angle: number) => void;
     onPause: () => void;
     onTogglePlaylist: () => void;
   } = $props();
@@ -33,7 +34,7 @@
   let platterAngle = 0;
   let platterEl: HTMLDivElement;
   let tonearmEl: SVGSVGElement;
-  let visualArmAngle = progressToAngle(0);
+  let armAngle = progressToAngle(0);
   let animationId: number;
   let draggingArm = $state(false);
   let faderDragging = $state(false);
@@ -68,15 +69,20 @@
     return () => dancer.destroy();
   });
 
-  // Sync visualArmAngle when parent changes tonearmAngle (e.g. loadTrack)
-  // This only fires on user-initiated changes, not during spin()
-  $effect(() => {
-    visualArmAngle = tonearmAngle;
-    checkArmOnRecord(tonearmAngle);
-  });
-
   const ANGLE_MIN = progressToAngle(0);
   const ANGLE_MAX = progressToAngle(1);
+
+  // parent가 tonearmAngle을 바꿀 때 DOM 반영 (loadTrack)
+  let lastSyncedAngle = -Infinity; // 초기에 반드시 실행되도록
+  $effect(() => {
+    const angle = tonearmAngle;
+    if (angle !== lastSyncedAngle) {
+      lastSyncedAngle = angle;
+      armAngle = angle;
+      if (tonearmEl) tonearmEl.style.transform = `rotate(${angle}deg)`;
+      checkArmOnRecord(angle);
+    }
+  });
 
   // Responsive scaling
   function updateScale() {
@@ -95,7 +101,10 @@
     if (motorOn) {
       spinning = true;
       spin();
-      if (armOnRecord) onSeek();
+      if (armOnRecord) {
+        seekCooldown = 60;
+        onSeek(armAngle);
+      }
     } else {
       spinning = false;
       cancelAnimationFrame(animationId);
@@ -110,34 +119,44 @@
     }
   });
 
-  // Arm on/off record detection (called from spin and drag, not from $effect)
+  /** tonearm 위치 변경 */
+  function setArmAngle(angle: number) {
+    armAngle = angle;
+    tonearmAngle = angle;
+    lastSyncedAngle = angle;
+    if (tonearmEl) tonearmEl.style.transform = `rotate(${angle}deg)`;
+  }
+
   function checkArmOnRecord(angle: number) {
     const onRecord = angle >= ANGLE_MIN - 1;
     if (onRecord !== armOnRecord) {
       armOnRecord = onRecord;
       if (!draggingArm && motorOn) {
-        if (armOnRecord) onSeek();
-        else onPause();
+        if (armOnRecord) {
+          seekCooldown = 60;
+          onSeek(armAngle);
+        } else {
+          onPause();
+        }
       }
     }
   }
 
   // Animation loop — all DOM updates are direct, bypassing Svelte reactivity
   let spinFrameCount = 0;
+  let seekCooldown = 0; // seek 직후 쿨다운 (프레임 수)
 
   function spin() {
     platterAngle += 0.5;
     if (platterEl) platterEl.style.transform = `rotate(${platterAngle}deg)`;
 
+    if (seekCooldown > 0) seekCooldown--;
+
     spinFrameCount++;
-    if (spinFrameCount % 10 === 0 && !draggingArm && armOnRecord) {
+    if (spinFrameCount % 10 === 0 && !draggingArm && armOnRecord && seekCooldown === 0) {
       const progress = getPlaybackProgress();
       if (progress !== null) {
-        const armProgress = angleToProgress(visualArmAngle);
-        if (Math.abs(progress - armProgress) < 0.03) {
-          visualArmAngle = progressToAngle(progress);
-          if (tonearmEl) tonearmEl.style.transform = `rotate(${visualArmAngle}deg)`;
-        }
+        setArmAngle(progressToAngle(progress));
       }
     }
 
@@ -163,15 +182,17 @@
     if (!draggingArm) return;
     const pivot = getPivotScreen();
     const mouseAngle = (Math.atan2(e.clientX - pivot.x, e.clientY - pivot.y) * 180) / Math.PI;
-    tonearmAngle = Math.max(ANGLE_MIN, Math.min(ANGLE_MAX, -mouseAngle - TIP_OFFSET));
-    visualArmAngle = tonearmAngle;
-    checkArmOnRecord(tonearmAngle);
+    const angle = Math.max(ANGLE_MIN, Math.min(ANGLE_MAX, -mouseAngle - TIP_OFFSET));
+    setArmAngle(angle);
+    checkArmOnRecord(angle);
   }
 
   function onArmUp() {
     draggingArm = false;
-    visualArmAngle = tonearmAngle;
-    if (motorOn && armOnRecord) onSeek();
+    if (motorOn && armOnRecord) {
+      seekCooldown = 60; // ~1초간 spin()의 arm 업데이트 중지
+      onSeek(armAngle);
+    }
   }
 
   // Volume fader
@@ -230,7 +251,6 @@
       width="50"
       height="220"
       viewBox="0 0 50 220"
-      style="transform: rotate({tonearmAngle}deg); cursor: grab; touch-action: none"
       onpointerdown={onArmDown}
       onpointermove={onArmMove}
       onpointerup={onArmUp}
@@ -295,7 +315,7 @@
         </button>
       </div>
     </div>
-    <span class="brand-name">Regulus</span>
+    <img class="brand-name" src={brandSig} alt="Regulus" />
     {#if chibis.length > 0}
       <div class="chibi-stage">
         {#each chibis as char (char.name)}
@@ -313,11 +333,9 @@
 
   .brand-name {
     position: absolute;
-    bottom: 20px;
-    left: 24px;
-    font-family: 'Great Vibes', cursive;
-    font-size: 26px;
-    color: #d4af37;
+    bottom: 16px;
+    left: 20px;
+    height: 42px;
     z-index: 2;
     pointer-events: none;
     opacity: 0.7;
@@ -541,6 +559,8 @@
     transform-origin: 25px 12px;
     filter: drop-shadow(2px 3px 4px rgba(0, 0, 0, 0.6));
     will-change: transform;
+    cursor: grab;
+    touch-action: none;
   }
 
   .controls {

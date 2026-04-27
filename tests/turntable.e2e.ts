@@ -32,7 +32,7 @@ test.describe('page load', () => {
 
   test('renders brand name', async ({ page }) => {
     await page.goto('/');
-    await expect(page.locator('.brand-name')).toHaveText('Regulus');
+    await expect(page.locator('.brand-name')).toHaveAttribute('alt', 'Regulus');
   });
 });
 
@@ -66,8 +66,8 @@ test.describe('tonearm', () => {
   test('starts at outer edge position', async ({ page }) => {
     await page.goto('/');
     const tonearm = page.locator('.tonearm');
-    const style = await tonearm.getAttribute('style');
-    const match = style?.match(/rotate\(([\d.]+)deg\)/);
+    const transform = await tonearm.evaluate((el) => el.style.transform);
+    const match = transform?.match(/rotate\(([\d.]+)deg\)/);
     expect(match).toBeTruthy();
     const angle = parseFloat(match![1]);
     expect(angle).toBeGreaterThan(0);
@@ -158,106 +158,6 @@ test.describe('playlist panel', () => {
     await expect(modeBtn).toHaveText('1');
     await modeBtn.click();
     await expect(modeBtn).toHaveText('\u2192');
-  });
-});
-
-test.describe('chibi dance', () => {
-  async function loadTrackWithChibis(page: import('@playwright/test').Page) {
-    await page.goto('/');
-    await page.locator('.mascot-btn').click();
-    await page.waitForTimeout(500);
-    // Enable dance
-    await page.locator('.dance-toggle input').check({ force: true });
-    // Select Ver 1.8 (has characters + BPM)
-    const rows = page.locator('.track-row');
-    const count = await rows.count();
-    for (let i = 0; i < count; i++) {
-      const text = await rows.nth(i).locator('.track-name-inner').textContent();
-      if (text?.includes('1.8')) {
-        await rows.nth(i).locator('.track-play').click();
-        break;
-      }
-    }
-    await page.waitForTimeout(500);
-  }
-
-  test('chibi stage appears when dance enabled and track has characters', async ({ page }) => {
-    await loadTrackWithChibis(page);
-    await expect(page.locator('.chibi-stage')).toBeVisible();
-  });
-
-  test('renders correct number of chibi wraps', async ({ page }) => {
-    await loadTrackWithChibis(page);
-    const wraps = page.locator('.chibi-wrap');
-    expect(await wraps.count()).toBe(3);
-  });
-
-  test('chibi images render inside wraps', async ({ page }) => {
-    await loadTrackWithChibis(page);
-    const imgs = page.locator('.chibi-wrap .chibi');
-    expect(await imgs.count()).toBe(3);
-  });
-
-  test('idle breathing animation applies transform', async ({ page }) => {
-    await loadTrackWithChibis(page);
-    await page.waitForTimeout(1000);
-    const wrap = page.locator('.chibi-wrap').first();
-    const style = await wrap.evaluate((el) => el.style.transform);
-    expect(style).not.toBe('');
-  });
-
-  test('dance animation starts when motor on', async ({ page }) => {
-    await loadTrackWithChibis(page);
-    await page.locator('.power-track').click();
-    await page.waitForTimeout(1500);
-    const wrap = page.locator('.chibi-wrap').first();
-    const style1 = await wrap.evaluate((el) => el.style.transform);
-    await page.waitForTimeout(500);
-    const style2 = await wrap.evaluate((el) => el.style.transform);
-    // Transform should be changing (animation running)
-    expect(style1 !== '' || style2 !== '').toBe(true);
-  });
-
-  test('dance stops and resets when motor off', async ({ page }) => {
-    await loadTrackWithChibis(page);
-    await page.locator('.power-track').click();
-    await page.waitForTimeout(1000);
-    // Motor off
-    await page.locator('.power-track').click();
-    await page.waitForTimeout(500);
-    // Should return to idle breathing
-    const wrap = page.locator('.chibi-wrap').first();
-    const style = await wrap.evaluate((el) => el.style.rotate);
-    expect(style).toBe('');
-  });
-
-  test('chibi stage hidden when dance disabled', async ({ page }) => {
-    await page.goto('/');
-    await page.locator('.mascot-btn').click();
-    await page.waitForTimeout(500);
-    // Dance off by default
-    const rows = page.locator('.track-row');
-    const count = await rows.count();
-    for (let i = 0; i < count; i++) {
-      const text = await rows.nth(i).locator('.track-name-inner').textContent();
-      if (text?.includes('1.8')) {
-        await rows.nth(i).locator('.track-play').click();
-        break;
-      }
-    }
-    await page.waitForTimeout(500);
-    await expect(page.locator('.chibi-stage')).not.toBeVisible();
-  });
-
-  test('chibi stage hidden for tracks without characters', async ({ page }) => {
-    await page.goto('/');
-    await page.locator('.mascot-btn').click();
-    await page.waitForTimeout(500);
-    await page.locator('.dance-toggle input').check({ force: true });
-    // Select first track (Ver 1.5, no characters)
-    await page.locator('.track-row').first().locator('.track-play').click();
-    await page.waitForTimeout(500);
-    await expect(page.locator('.chibi-stage')).not.toBeVisible();
   });
 });
 

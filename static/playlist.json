@@ -1,8 +1,27 @@
 [
   {
+    "version": "Ver 1.0",
+    "cover": "https://img.youtu.be/vi/f2fCNclSgW0?si=QPZdcjbsScAmvjWR/hqdefault.jpg",
+    "tracks": [
+      {
+        "url": "https://youtu.be/ZfwATb8tTjg?si=iOi9aOzsagn-DKJ-",
+        "name": "Forget Me Not Theme"
+      }
+    ]
+  },
+  {
+    "version": "Ver 1.4",
+    "cover": "https://img.youtu.be/vi/f2fCNclSgW0?si=QPZdcjbsScAmvjWR/hqdefault.jpg",
+    "tracks": [
+      {
+        "url": "https://youtu.be/BD7-UhP0egI?si=IEThgte3PMHOvBDL",
+        "name": "The Prisoner in the Cave"
+      }
+    ]
+  },
+  {
     "version": "Ver 1.5",
     "cover": "https://img.youtu.be/vi/f2fCNclSgW0?si=QPZdcjbsScAmvjWR/hqdefault.jpg",
-    "characters": [],
     "tracks": [
       {
         "url": "https://youtu.be/kwDgQlRVWrk?si=Su3A4sYVKhqR2w2e",
@@ -11,10 +30,34 @@
     ]
   },
   {
-    "version": "Ch. 6",
+    "version": "Ver 1.6",
     "cover": "https://img.youtu.be/vi/f2fCNclSgW0?si=QPZdcjbsScAmvjWR/hqdefault.jpg",
-    "characters": [],
     "tracks": [
+      {
+        "url": "https://youtu.be/gAfk0u7F6gE?si=ha2mRvU4ZZUgJDyl",
+        "name": "Bewildered Heart",
+        "start": 103
+      }
+    ]
+  },
+  {
+    "version": "Ver 1.7",
+    "cover": "https://img.youtu.be/vi/f2fCNclSgW0?si=QPZdcjbsScAmvjWR/hqdefault.jpg",
+    "tracks": [
+      {
+        "url": "https://youtu.be/Yh9YET-xMKI?si=-RbIFYRhHbusOk0S",
+        "name": "E Lucevan Le Stelle"
+      },
+      {
+        "url": "https://youtu.be/MBoJizAEoqc?si=3aQA3uxaWwXUEGmb",
+        "name": "Welcome to the Theater",
+        "start": 122
+      },
+      {
+        "url": "https://youtu.be/V4psYPV7nlE?si=PMinVpU_9JoUqJPS",
+        "name": "My Eyes",
+        "start": 349
+      },
       {
         "url": "https://youtu.be/XRuys3OM1Gg?si=PqGQhXPbCHhSxMY2",
         "name": "Memories in the Mirror"
@@ -24,30 +67,64 @@
   {
     "version": "Ver 1.8",
     "cover": "https://img.youtu.be/vi/f2fCNclSgW0?si=QPZdcjbsScAmvjWR/hqdefault.jpg",
-    "characters": ["Windsong", "Vila", "Avgust"],
     "tracks": [
       {
+        "url": "https://youtu.be/VFQgKWKCAqc?si=Ce3MxSRT_GNz-og-",
+        "name": "Icebreaker"
+      },
+      {
+        "url": "https://youtu.be/M5IsYlmCZeE?si=gGYkiG8qpuqf4Tns",
+        "name": "Sea Swallow"
+      },
+      {
         "url": "https://youtu.be/CGdH5kmzZ6g?si=zKXWBzId4Jpyd0EP",
-        "name": "안녕, 라야시키",
-        "bpm": 108
+        "name": "Farewell, Rayashki"
+      },
+      {
+        "url": "https://youtu.be/UedJsrlSZM8?si=ngd4gIOAlcY7T2zj",
+        "name": "More Ore!"
+      },
+      {
+        "url": "https://youtu.be/6kMCzjVWFLk?si=aCU9_TYx4KrnWZMV",
+        "name": "Polar Night"
       }
     ]
   },
   {
     "version": "Ver 1.9",
     "cover": "https://img.youtu.be/vi/f2fCNclSgW0?si=QPZdcjbsScAmvjWR/hqdefault.jpg",
-    "characters": [],
     "tracks": [
       {
         "url": "https://youtu.be/2T1dQG-x9HE?si=c57E-hrQluHGdgfX",
         "name": "Chopin Nocturne Op. 72 No. 1"
+      },
+      {
+        "url": "https://youtu.be/FQkeD3gdr1I?si=DeAmF2lhNw2LDGCE",
+        "name": "Dust to Dust"
+      },
+      {
+        "url": "https://youtu.be/bQAUvSDEwDo?si=nuKW0ZLl4Te5ljjl",
+        "name": "Vereinsamt"
+      }
+    ]
+  },
+  {
+    "version": "Ver 2.2",
+    "cover": "https://img.youtu.be/vi/f2fCNclSgW0?si=QPZdcjbsScAmvjWR/hqdefault.jpg",
+    "tracks": [
+      {
+        "url": "https://youtu.be/hoO6cK553ro?si=BFv9Zjz_hAisNyIV",
+        "name": "Tristes Tropiques"
+      },
+      {
+        "url": "https://youtu.be/00HG_4wmfF0?si=YwXDUFoJBgGj4R5v",
+        "name": "Whisk to L, Whisk to R"
       }
     ]
   },
   {
     "version": "Ver 2.3",
     "cover": "https://img.youtu.be/vi/f2fCNclSgW0?si=QPZdcjbsScAmvjWR/hqdefault.jpg",
-    "characters": [],
     "tracks": [
       {
         "url": "https://youtu.be/T5OyeNq4p_E?si=1Mm9LJ-14ekUlBiW",
@@ -58,11 +135,87 @@
   {
     "version": "Ver 2.4",
     "cover": "https://img.youtu.be/vi/f2fCNclSgW0?si=QPZdcjbsScAmvjWR/hqdefault.jpg",
-    "characters": [],
     "tracks": [
       {
         "url": "https://youtu.be/f2fCNclSgW0?si=QPZdcjbsScAmvjWR",
-        "name": "지구에서의 마지막 밤"
+        "name": "Last Evenings on Earth"
+      }
+    ]
+  },
+  {
+    "version": "Ver 2.5",
+    "cover": "https://img.youtu.be/vi/f2fCNclSgW0?si=QPZdcjbsScAmvjWR/hqdefault.jpg",
+    "tracks": [
+      {
+        "url": "https://youtu.be/HFQ5ORwfKCo?si=JXtSDFOd53flfzUQ",
+        "name": "Rock Solid"
+      }
+    ]
+  },
+  {
+    "version": "Ver 2.6",
+    "cover": "https://img.youtu.be/vi/f2fCNclSgW0?si=QPZdcjbsScAmvjWR/hqdefault.jpg",
+    "tracks": [
+      {
+        "url": "https://youtu.be/mysT8qitb1A?si=KVggOxZqkiVfRyGl",
+        "name": "Folie et Déraison"
+      },
+      {
+        "url": "https://youtu.be/l1Na9yi8-iA?si=3w2nXK_MUBI2LQID",
+        "name": "Yo Te Canto"
+      }
+    ]
+  },
+  {
+    "version": "Ver 3.0",
+    "cover": "https://img.youtu.be/vi/f2fCNclSgW0?si=QPZdcjbsScAmvjWR/hqdefault.jpg",
+    "tracks": [
+      {
+        "url": "https://youtu.be/bjzsDarr49U?si=r2rUsSTizciVvxZb",
+        "name": "A Long Long Way"
+      },
+      {
+        "url": "https://youtu.be/QcyBviW5rv8?si=cLtPJUzFoqbliSff",
+        "name": "Melody on the Trigger",
+        "start": 50
+      }
+    ]
+  },
+  {
+    "version": "Ver 3.1",
+    "cover": "https://img.youtu.be/vi/f2fCNclSgW0?si=QPZdcjbsScAmvjWR/hqdefault.jpg",
+    "tracks": [
+      {
+        "url": "https://youtu.be/iUefLaVABrI?si=Nft6Fe07ubjq8Lu6",
+        "name": "The Midnight Whistle"
+      },
+      {
+        "url": "https://youtu.be/xbfhdiZkJRo?si=y9zr6UaqM3oxELHd",
+        "name": "Rubuska the First"
+      }
+    ]
+  },
+  {
+    "version": "Ver 3.2",
+    "cover": "https://img.youtu.be/vi/f2fCNclSgW0?si=QPZdcjbsScAmvjWR/hqdefault.jpg",
+    "tracks": [
+      {
+        "url": "https://youtu.be/Ed9_kUvpqmc?si=w78hnziLpvGJcwbh",
+        "name": "A Flowing Feast"
+      },
+      {
+        "url": "https://youtu.be/Ra9WGW0_eBY?si=aA0Zzco8dO0ZQZRY",
+        "name": "Taxi Jam"
+      }
+    ]
+  },
+  {
+    "version": "Ver 3.3",
+    "cover": "https://img.youtu.be/vi/f2fCNclSgW0?si=QPZdcjbsScAmvjWR/hqdefault.jpg",
+    "tracks": [
+      {
+        "url": "https://youtu.be/M6N628q2SwQ?si=poPlt1S8CRbY_NhO",
+        "name": "The Campaign's Tale"
       }
     ]
   }

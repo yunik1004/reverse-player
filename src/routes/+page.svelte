@@ -30,7 +30,7 @@
   let currentTrack = $state<FlatTrack | null>(null);
   let playRange = $state<PlayRange>({ start: 0, end: null });
   let showPlaylist = $state(false);
-  let danceEnabled = $state(false);
+  const danceEnabled = false;
   let playMode = $state<'sequential' | 'shuffle' | 'repeat' | 'once'>('sequential');
   let shuffleQueue = $state<number[]>([]);
 
@@ -44,10 +44,7 @@
       }
     });
 
-    const [playlistRes, charsRes] = await Promise.all([
-      fetch('/playlist.json'),
-      fetch('/characters.json')
-    ]);
+    const playlistRes = await fetch('/playlist.json');
     if (playlistRes.ok) {
       groups = await playlistRes.json();
       tracks = groups.flatMap((g) =>
@@ -56,12 +53,9 @@
           cover: t.cover ?? g.cover,
           groupCover: g.cover,
           groupVersion: g.version,
-          groupCharacters: g.characters
+          groupCharacters: g.characters ?? []
         }))
       );
-    }
-    if (charsRes.ok) {
-      characters = await charsRes.json();
     }
   });
 
@@ -74,7 +68,7 @@
     player.setVolume(volume);
     tonearmAngle = progressToAngle(0);
     if (motorOn && armOnRecord) {
-      seekToArm();
+      seekToArm(tonearmAngle);
     }
   }
 
@@ -140,9 +134,9 @@
       : []
   );
 
-  function seekToArm() {
+  function seekToArm(angle: number) {
     if (!player || !playerReady) return;
-    playFromProgress(player, angleToProgress(tonearmAngle), volume, playRange);
+    playFromProgress(player, angleToProgress(angle), volume, playRange);
   }
 
   function pause() {
@@ -229,10 +223,6 @@
               <button class="mode-btn" onclick={cyclePlayMode} aria-label="Play mode"
                 >{playModeIcon}</button
               >
-              <label class="dance-toggle">
-                <input type="checkbox" bind:checked={danceEnabled} />
-                <span class="dance-label">dance</span>
-              </label>
             </div>
             <button class="header-btn" onclick={togglePlaylist} aria-label="Close">&times;</button>
           </div>
@@ -343,40 +333,6 @@
     display: flex;
     align-items: center;
     gap: 12px;
-  }
-
-  .dance-toggle {
-    display: flex;
-    align-items: center;
-    gap: 4px;
-    cursor: pointer;
-  }
-
-  .dance-toggle input {
-    -webkit-appearance: none;
-    -moz-appearance: none;
-    appearance: none;
-    width: 12px;
-    height: 12px;
-    border: 1px solid rgba(212, 175, 55, 0.3);
-    border-radius: 2px;
-    background: rgba(20, 16, 10, 0.8);
-    cursor: pointer;
-    margin: 0;
-    outline: none !important;
-    box-shadow: none !important;
-  }
-
-  .dance-toggle input:checked {
-    background: rgba(212, 175, 55, 0.6);
-    border-color: rgba(212, 175, 55, 0.6);
-  }
-
-  .dance-label {
-    font-family: 'Cinzel', serif;
-    font-size: 8px;
-    color: rgba(212, 175, 55, 0.4);
-    letter-spacing: 0.05em;
   }
 
   .header-btn {
