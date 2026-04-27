@@ -70,6 +70,7 @@
       armAngle = angle;
       if (tonearmEl) tonearmEl.style.transform = `rotate(${angle}deg)`;
       checkArmOnRecord(angle);
+      seekCooldown = 60;
     }
   });
 
