@@ -9,6 +9,7 @@
     getRangeProgress,
     type PlayRange
   } from '$lib/youtube';
+  import { base } from '$app/paths';
   import type { Track, TrackGroup } from '$lib/types';
 
   interface FlatTrack extends Track {
@@ -42,13 +43,13 @@
       }
     });
 
-    const playlistRes = await fetch('/playlist.json');
+    const playlistRes = await fetch(`${base}/playlist.json`);
     if (playlistRes.ok) {
       groups = await playlistRes.json();
       tracks = groups.flatMap((g) =>
         g.tracks.map((t) => ({
           ...t,
-          cover: t.cover ?? g.cover,
+          cover: (t.cover ?? g.cover)?.replace(/^\//, `${base}/`),
           groupCover: g.cover,
           groupVersion: g.version
         }))
