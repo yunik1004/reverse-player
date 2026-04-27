@@ -42,6 +42,8 @@
   let scale = $state(1);
   let chibiEls: HTMLElement[] = [];
   const dancer = new ChibiDanceController();
+  let mascotEl: HTMLImageElement;
+  const mascotDancer = new ChibiDanceController();
 
   function trackChibi(node: HTMLElement) {
     chibiEls.push(node);
@@ -67,6 +69,21 @@
 
   $effect(() => {
     return () => dancer.destroy();
+  });
+
+  // 마스코트 숨쉬기/댄스
+  $effect(() => {
+    if (!mascotEl) return;
+    mascotDancer.setElements([mascotEl]);
+    if (motorOn && armOnRecord) {
+      mascotDancer.startDance(bpm ?? 120);
+    } else {
+      mascotDancer.startIdle(bpm);
+    }
+  });
+
+  $effect(() => {
+    return () => mascotDancer.destroy();
   });
 
   const ANGLE_MIN = progressToAngle(0);
@@ -221,7 +238,7 @@
   <div class="turntable" bind:this={turntableEl}>
     <div class="wood-grain"></div>
     <button class="mascot-btn" onclick={onTogglePlaylist} aria-label="Toggle playlist">
-      <img class="mascot" src={mascot} alt="" />
+      <img class="mascot" src={mascot} alt="" bind:this={mascotEl} />
     </button>
     <div class="metal-plate"></div>
 
@@ -523,6 +540,7 @@
   .mascot {
     width: 50px;
     opacity: 0.85;
+    transform-origin: center bottom;
   }
 
   .chibi-stage {
@@ -539,9 +557,8 @@
   }
 
   .chibi-wrap {
-    transform-origin: center bottom;
+    transform-origin: center center;
     will-change: transform;
-    transition: rotate 0.3s ease;
   }
 
   .chibi {

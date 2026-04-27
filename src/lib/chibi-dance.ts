@@ -14,7 +14,6 @@ type RoutineFactory = (els: HTMLElement[], beatMs: number) => Step[];
 
 const EASE_OUT = [0.33, 1, 0.68, 1] as const;
 const EASE_BACK = [0.34, 1.56, 0.64, 1] as const;
-const EASE_INOUT = [0.45, 0, 0.55, 1] as const;
 
 // --- Helpers ---
 
@@ -33,12 +32,6 @@ function b4(beatMs: number) {
 }
 function b6(beatMs: number) {
   return (beatMs * 0.6) / 1000;
-}
-function b1(beatMs: number) {
-  return beatMs / 1000;
-}
-function bHalf(beatMs: number) {
-  return (beatMs * 0.5) / 1000;
 }
 
 /** Generate a bounce step (up + land) */
@@ -77,51 +70,16 @@ function resetState() {
 
 // --- Routines ---
 
-/** 전원 동시 바운스 (4회) */
-const syncBounce: RoutineFactory = (els, beatMs) => {
-  const steps: Step[] = [];
-  for (let i = 0; i < 4; i++) steps.push(...bounce(els, beatMs));
-  return steps;
+/** 바운스 1회 */
+const basicBounce: RoutineFactory = (els, beatMs) => {
+  return bounce(els, beatMs);
 };
 
-/** Y축 180도 뒤집기 (CSS rotate, 상태 유지) */
-const yFlip: RoutineFactory = (els, beatMs) => {
+/** 좌우반전 — scaleX는 playNextRoutine에서 자동 주입 */
+const flip: RoutineFactory = (els, beatMs) => {
   flipped = !flipped;
   randomizeChibiImages(els);
-  els.forEach((el) => {
-    el.style.rotate = flipped ? 'y 180deg' : '';
-  });
   return bounce(els, beatMs, -10);
-};
-
-/** 뒤집기 + 연속 바운스 */
-const spinHop: RoutineFactory = (els, beatMs) => {
-  flipped = !flipped;
-  randomizeChibiImages(els);
-  els.forEach((el) => {
-    el.style.rotate = flipped ? 'y 180deg' : '';
-  });
-  return [...bounce(els, beatMs, -14), ...bounce(els, beatMs, -10)];
-};
-
-/** 홀짝 번갈아 바운스 */
-const callResponse: RoutineFactory = (els, beatMs) => {
-  const odd = els.filter((_, i) => i % 2 === 1);
-  const even = els.filter((_, i) => i % 2 === 0);
-  return [...bounce(odd, beatMs), ...bounce(even, beatMs), ...bounce(els, beatMs, -10)];
-};
-
-/** 진자 흔들기 (2~3왕복) */
-const pendulum: RoutineFactory = (els, beatMs) => {
-  const d = b1(beatMs);
-  const reps = 2 + Math.floor(Math.random() * 2);
-  const steps: Step[] = [];
-  for (let i = 0; i < reps; i++) {
-    steps.push([els, { rotate: 7 }, { duration: d, ease: EASE_INOUT }]);
-    steps.push([els, { rotate: -7 }, { duration: d, ease: EASE_INOUT }]);
-  }
-  steps.push([els, { rotate: 0 }, { duration: d * 0.5, ease: EASE_INOUT }]);
-  return steps;
 };
 
 /** 통통 2번 튀면서 좌/우 이동 (위치 기억) */
@@ -140,141 +98,34 @@ const hopMove: RoutineFactory = (els, beatMs) => {
   return steps;
 };
 
-/** Y축 스핀 헬퍼 — style.rotate로 직접 회전, flip 상태 유지 */
-function spinTargets(targets: HTMLElement[], beatMs: number, spins: number): Step[] {
-  // 스핀은 style.rotate를 직접 조작. 바운스로 시간 채움.
-  const dir = Math.random() < 0.5 ? 1 : -1;
-  const base = flipped ? 180 : 0;
+/** 진자 흔들기 — 발밑 축으로 좌우 회전 (2~3왕복) */
+const pendulum: RoutineFactory = (els, beatMs) => {
+  const d = beatMs / 1000;
+  const reps = 2;
   const steps: Step[] = [];
-  for (let i = 0; i < spins; i++) {
-    // 반바퀴씩 나눠서 transition으로 회전
-    const mid = base + dir * (360 * i + 180);
-    const end = base + dir * 360 * (i + 1);
-    steps.push([
-      targets,
-      { y: -6 },
-      {
-        duration: bHalf(beatMs),
-        ease: EASE_OUT,
-        onStart: () => {
-          targets.forEach((el) => {
-            el.style.rotate = `y ${mid}deg`;
-          });
-        }
-      }
-    ]);
-    steps.push([
-      targets,
-      { y: 0 },
-      {
-        duration: bHalf(beatMs),
-        ease: EASE_BACK,
-        onStart: () => {
-          targets.forEach((el) => {
-            el.style.rotate = `y ${end}deg`;
-          });
-        }
-      }
-    ]);
+  for (let i = 0; i < reps; i++) {
+    steps.push([els, { rotate: 5 }, { duration: d, ease: EASE_OUT }]);
+    steps.push([els, { rotate: -5 }, { duration: d, ease: EASE_OUT }]);
   }
-  // 최종 상태를 flip 상태에 맞게 정리
-  steps.push([
-    targets,
-    { y: 0 },
-    {
-      duration: 0.01,
-      onComplete: () => {
-        targets.forEach((el) => {
-          el.style.rotate = flipped ? 'y 180deg' : '';
-        });
-      }
-    }
-  ]);
-  return steps;
-}
-
-/** 가운데 chibi Y축 2바퀴 회전 */
-const centerSpin: RoutineFactory = (els, beatMs) => {
-  return spinTargets([els[Math.floor(els.length / 2)]], beatMs, 2);
-};
-
-/** 전원 Y축 2바퀴 회전 */
-const allSpin: RoutineFactory = (els, beatMs) => {
-  return spinTargets(els, beatMs, 2);
-};
-
-/** 쪼그려 튀기 (2회) */
-const squatJump: RoutineFactory = (els, beatMs) => {
-  const d = b1(beatMs);
-  const steps: Step[] = [];
-  for (let i = 0; i < 2; i++) {
-    steps.push([els, { scaleY: 0.85, scaleX: 1.08 }, { duration: d * 0.6, ease: EASE_INOUT }]);
-    steps.push([
-      els,
-      { scaleY: 1.05, scaleX: 0.95, y: -18 },
-      { duration: d * 0.3, ease: EASE_OUT }
-    ]);
-    steps.push([els, { scaleY: 0.9, scaleX: 1.05, y: 0 }, { duration: d * 0.3, ease: EASE_BACK }]);
-    steps.push([els, { scaleY: 1, scaleX: 1 }, { duration: d * 0.3, ease: EASE_INOUT }]);
-  }
+  steps.push([els, { rotate: 0 }, { duration: d * 0.5, ease: EASE_BACK }]);
   return steps;
 };
 
-/** 점프 후 포즈 */
-const jumpPose: RoutineFactory = (els, beatMs) => {
-  const d = b1(beatMs);
-  return [
-    [els, { scaleY: 0.9, scaleX: 1.05 }, { duration: d * 0.5, ease: EASE_INOUT }],
-    [els, { y: -22, scaleY: 1, scaleX: 1, rotate: 5 }, { duration: d * 0.4, ease: EASE_OUT }],
-    [els, { y: -22, rotate: 5 }, { duration: d * 0.8 }],
-    [els, { y: 0, rotate: 0, scaleY: 0.9, scaleX: 1.05 }, { duration: d * 0.3, ease: EASE_BACK }],
-    [els, { scaleY: 1, scaleX: 1 }, { duration: d * 0.4, ease: EASE_INOUT }]
-  ];
-};
-
-/** 좌우 스텝터치 (4회) */
-const stepTouch: RoutineFactory = (els, beatMs) => {
-  const d = b1(beatMs);
-  const steps: Step[] = [];
-  for (let i = 0; i < 4; i++) {
-    const dir = i % 2 === 0 ? 1 : -1;
-    steps.push([
-      els,
-      { rotate: dir * 5, x: dir * 6, y: -4 },
-      { duration: d * 0.4, ease: EASE_OUT }
-    ]);
-    steps.push([
-      els,
-      { rotate: dir * 5, x: dir * 6, y: 0 },
-      { duration: d * 0.6, ease: EASE_BACK }
-    ]);
-  }
-  steps.push([els, { rotate: 0, x: 0 }, { duration: d * 0.3, ease: EASE_INOUT }]);
-  return steps;
-};
+/** allSpin은 controller에서 타이밍 제어 */
+const allSpin = 'allSpin' as const;
 
 // --- Routine list ---
 
-const ALL_ROUTINES: RoutineFactory[] = [
-  syncBounce,
-  yFlip,
-  spinHop,
-  callResponse,
-  pendulum,
-  hopMove,
-  centerSpin,
-  allSpin,
-  squatJump,
-  jumpPose,
-  stepTouch
-];
+type Routine = RoutineFactory | 'allSpin';
+
+const ALL_ROUTINES: Routine[] = [basicBounce, flip, hopMove, pendulum, allSpin];
 
 // --- Controller ---
 
 export class ChibiDanceController {
   private els: HTMLElement[] = [];
   private animation: AnimationPlaybackControlsWithThen | null = null;
-  private shuffled: RoutineFactory[] = [];
+  private shuffled: Routine[] = [];
   private shuffleIdx = 0;
   private active: 'idle' | 'dance' | 'none' = 'none';
 
@@ -326,7 +177,6 @@ export class ChibiDanceController {
     resetState();
     this.els.forEach((el) => {
       el.style.transform = '';
-      el.style.rotate = '';
     });
   }
 
@@ -343,10 +193,47 @@ export class ChibiDanceController {
       this.shuffleIdx = 0;
     }
 
-    const sequence = this.shuffled[this.shuffleIdx++](this.els, beatMs);
+    const routine = this.shuffled[this.shuffleIdx++];
+
+    if (routine === 'allSpin') {
+      this.doFlips(this.els, beatMs, 2);
+      return;
+    }
+
+    const sequence = routine(this.els, beatMs);
+    // 모든 스텝에 현재 flip 상태의 scaleX + rotate 리셋 주입
+    const sx = flipped ? -1 : 1;
+    for (const step of sequence) {
+      if (!('scaleX' in step[1])) step[1] = { ...step[1], scaleX: sx };
+      if (!('rotate' in step[1])) step[1] = { ...step[1], rotate: 0 };
+    }
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     this.animation = animate(sequence as any);
     this.animation.then(() => this.playNextRoutine(beatMs)).catch(() => {});
+  }
+
+  private doFlips(els: HTMLElement[], beatMs: number, count: number): void {
+    let i = 0;
+
+    const flipDur = (beatMs * 0.6) / 1000;
+
+    const doOne = () => {
+      if (this.active !== 'dance' || i >= count) {
+        this.playNextRoutine(beatMs);
+        return;
+      }
+      i++;
+      flipped = !flipped;
+      const sx = flipped ? -1 : 1;
+      const seq: Step[] = [
+        [els, { scaleX: 0, rotate: 0 }, { duration: flipDur / 2, ease: EASE_OUT }],
+        [els, { scaleX: sx, rotate: 0 }, { duration: flipDur / 2, ease: EASE_OUT }]
+      ];
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      this.animation = animate(seq as any);
+      this.animation.then(() => doOne()).catch(() => {});
+    };
+    doOne();
   }
 
   private cancelAll(): void {
