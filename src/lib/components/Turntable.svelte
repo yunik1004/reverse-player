@@ -56,6 +56,7 @@
 
   $effect(() => {
     if (chibis.length === 0) return;
+    dancer.setChibiSrcs(chibis.map((c) => c.chibi));
     if (motorOn && armOnRecord) {
       dancer.startDance(bpm ?? 120);
     } else {
@@ -299,7 +300,7 @@
       <div class="chibi-stage">
         {#each chibis as char (char.name)}
           <div class="chibi-wrap" use:trackChibi>
-            <img class="chibi" src={char.chibi} alt={char.name} />
+            <img class="chibi" src={char.chibi[0]} alt={char.name} />
           </div>
         {/each}
       </div>

@@ -20,5 +20,5 @@ export interface TrackGroup {
 
 export interface Character {
   name: string;
-  chibi: string;
+  chibi: string[];
 }

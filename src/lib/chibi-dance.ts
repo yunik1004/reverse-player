@@ -53,6 +53,22 @@ function bounce(els: HTMLElement[], beatMs: number, height = -12): Step[] {
 
 let flipped = false;
 let hopPos = 0; // -1 | 0 | 1
+let chibiSrcs: string[][] = []; // 각 wrap 요소에 대응하는 chibi 이미지 목록
+
+/** flip 시 각 chibi 이미지를 랜덤 변경 */
+function randomizeChibiImages(els: HTMLElement[]) {
+  els.forEach((el, i) => {
+    const srcs = chibiSrcs[i];
+    if (!srcs || srcs.length <= 1) return;
+    const img = el.querySelector('img');
+    if (!img) return;
+    const current = img.src;
+    const others = srcs.filter((s) => !current.endsWith(s));
+    if (others.length > 0) {
+      img.src = others[Math.floor(Math.random() * others.length)];
+    }
+  });
+}
 
 function resetState() {
   flipped = false;
@@ -71,6 +87,7 @@ const syncBounce: RoutineFactory = (els, beatMs) => {
 /** Y축 180도 뒤집기 (CSS rotate, 상태 유지) */
 const yFlip: RoutineFactory = (els, beatMs) => {
   flipped = !flipped;
+  randomizeChibiImages(els);
   els.forEach((el) => {
     el.style.rotate = flipped ? 'y 180deg' : '';
   });
@@ -80,6 +97,7 @@ const yFlip: RoutineFactory = (els, beatMs) => {
 /** 뒤집기 + 연속 바운스 */
 const spinHop: RoutineFactory = (els, beatMs) => {
   flipped = !flipped;
+  randomizeChibiImages(els);
   els.forEach((el) => {
     el.style.rotate = flipped ? 'y 180deg' : '';
   });
@@ -262,6 +280,10 @@ export class ChibiDanceController {
 
   setElements(els: HTMLElement[]): void {
     this.els = els;
+  }
+
+  setChibiSrcs(srcs: string[][]): void {
+    chibiSrcs = srcs;
   }
 
   startIdle(bpm?: number): void {
