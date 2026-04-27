@@ -12,6 +12,7 @@
     coverUrl = '',
     chibis = [],
     bpm,
+    danceEnabled = false,
     getPlaybackProgress,
     onSeek,
     onPause,
@@ -24,6 +25,7 @@
     coverUrl?: string;
     chibis?: Character[];
     bpm?: number;
+    danceEnabled?: boolean;
     getPlaybackProgress: () => number | null;
     onSeek: (angle: number) => void;
     onPause: () => void;
@@ -75,6 +77,10 @@
   $effect(() => {
     if (!mascotEl) return;
     mascotDancer.setElements([mascotEl]);
+    if (!danceEnabled) {
+      mascotDancer.stop();
+      return;
+    }
     if (motorOn && armOnRecord) {
       mascotDancer.startDance(bpm ?? 120);
     } else {

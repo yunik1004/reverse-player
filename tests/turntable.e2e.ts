@@ -147,7 +147,7 @@ test.describe('playlist panel', () => {
   test('play mode button cycles through modes', async ({ page }) => {
     await page.goto('/');
     await page.locator('.mascot-btn').click();
-    const modeBtn = page.locator('.mode-btn');
+    const modeBtn = page.locator('[aria-label="Play mode"]');
     await expect(modeBtn).toBeVisible();
     await expect(modeBtn).toHaveText('\u2192');
     await modeBtn.click();

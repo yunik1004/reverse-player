@@ -30,7 +30,7 @@
   let currentTrack = $state<FlatTrack | null>(null);
   let playRange = $state<PlayRange>({ start: 0, end: null });
   let showPlaylist = $state(false);
-  const danceEnabled = false;
+  let danceEnabled = $state(false);
   let playMode = $state<'sequential' | 'shuffle' | 'repeat' | 'once'>('sequential');
   let shuffleQueue = $state<number[]>([]);
 
@@ -209,6 +209,7 @@
       coverUrl={currentTrack?.cover ?? ''}
       chibis={activeChibis}
       bpm={currentTrack?.bpm}
+      {danceEnabled}
       {getPlaybackProgress}
       onSeek={seekToArm}
       onPause={pause}
@@ -222,6 +223,12 @@
             <div class="header-left">
               <button class="mode-btn" onclick={cyclePlayMode} aria-label="Play mode"
                 >{playModeIcon}</button
+              >
+              <button
+                class="mode-btn"
+                class:active={danceEnabled}
+                onclick={() => (danceEnabled = !danceEnabled)}
+                aria-label="Toggle dance">dance</button
               >
             </div>
             <button class="header-btn" onclick={togglePlaylist} aria-label="Close">&times;</button>
@@ -319,12 +326,18 @@
     color: rgba(212, 175, 55, 0.7);
     font-size: 12px;
     cursor: pointer;
-    padding: 2px 0;
-    width: 24px;
+    padding: 2px 4px;
+    min-width: 24px;
     text-align: center;
   }
 
   .mode-btn:hover {
+    color: rgba(212, 175, 55, 0.9);
+    border-color: rgba(212, 175, 55, 0.5);
+  }
+
+  .mode-btn.active {
+    background: rgba(212, 175, 55, 0.25);
     color: rgba(212, 175, 55, 0.9);
     border-color: rgba(212, 175, 55, 0.5);
   }
