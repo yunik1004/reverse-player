@@ -39,6 +39,7 @@
   let faderDragging = $state(false);
   let turntableEl: HTMLDivElement;
   let scale = $state(1);
+  let ready = $state(false);
   let mascotEl: HTMLImageElement;
   const mascotDancer = new ChibiDanceController();
 
@@ -83,6 +84,7 @@
 
   $effect(() => {
     updateScale();
+    ready = true;
     window.addEventListener('resize', updateScale);
     return () => window.removeEventListener('resize', updateScale);
   });
@@ -217,7 +219,12 @@
   }
 </script>
 
-<div class="turntable-wrapper" style="transform: scale({scale}); transform-origin: center center">
+<div
+  class="turntable-wrapper"
+  style="transform: scale({scale}); transform-origin: center center; opacity: {ready
+    ? 1
+    : 0}; transition: opacity 0.15s"
+>
   <div class="turntable" bind:this={turntableEl}>
     {#if children}{@render children()}{/if}
     <div class="wood-grain"></div>

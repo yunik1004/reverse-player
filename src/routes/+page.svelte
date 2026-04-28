@@ -309,7 +309,6 @@
   .main-area {
     display: flex;
     align-items: center;
-    gap: 24px;
     z-index: 1;
   }
 
@@ -323,6 +322,7 @@
 
   .playlist-panel.open {
     width: 240px;
+    margin-left: 24px;
   }
 
   .playlist-inner {
