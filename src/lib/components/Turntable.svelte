@@ -13,7 +13,8 @@
     getPlaybackProgress,
     onSeek,
     onPause,
-    onTogglePlaylist
+    onTogglePlaylist,
+    children
   }: {
     motorOn: boolean;
     armOnRecord: boolean;
@@ -25,6 +26,7 @@
     onSeek: (angle: number) => void;
     onPause: () => void;
     onTogglePlaylist: () => void;
+    children?: import('svelte').Snippet;
   } = $props();
 
   let spinning = $state(false);
@@ -217,6 +219,7 @@
 
 <div class="turntable-wrapper" style="transform: scale({scale}); transform-origin: center center">
   <div class="turntable" bind:this={turntableEl}>
+    {#if children}{@render children()}{/if}
     <div class="wood-grain"></div>
     <button class="mascot-btn" onclick={onTogglePlaylist} aria-label="Toggle playlist">
       <img class="mascot" src={mascot} alt="" bind:this={mascotEl} />

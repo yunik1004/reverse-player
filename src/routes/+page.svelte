@@ -201,10 +201,6 @@
   <div class="ornament bottom-right"></div>
 
   <div class="main-area">
-    <div class="yt-player" class:yt-visible={videoVisible}>
-      <div id="yt-player"></div>
-    </div>
-
     <Turntable
       bind:motorOn
       bind:armOnRecord
@@ -216,7 +212,11 @@
       onSeek={seekToArm}
       onPause={pause}
       onTogglePlaylist={togglePlaylist}
-    />
+    >
+      <div class="yt-player" class:yt-visible={videoVisible}>
+        <div id="yt-player"></div>
+      </div>
+    </Turntable>
 
     {#if tracks.length > 0}
       <div class="playlist-panel" class:open={showPlaylist}>
@@ -311,7 +311,6 @@
     align-items: center;
     gap: 24px;
     z-index: 1;
-    position: relative;
   }
 
   /* Playlist panel */
