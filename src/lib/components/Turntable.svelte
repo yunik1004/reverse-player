@@ -221,11 +221,15 @@
 
 <div
   class="turntable-wrapper"
-  style="transform: scale({scale}); transform-origin: center center; opacity: {ready
+  style="width: {500 * scale}px; height: {420 * scale}px; opacity: {ready
     ? 1
     : 0}; transition: opacity 0.15s"
 >
-  <div class="turntable" bind:this={turntableEl}>
+  <div
+    class="turntable"
+    bind:this={turntableEl}
+    style="transform: scale({scale}); transform-origin: top left"
+  >
     {#if children}{@render children()}{/if}
     <div class="wood-grain"></div>
     <button class="mascot-btn" onclick={onTogglePlaylist} aria-label="Toggle playlist">
@@ -339,8 +343,7 @@
   }
 
   .turntable-wrapper {
-    width: 500px;
-    height: 420px;
+    position: relative;
   }
 
   .turntable {

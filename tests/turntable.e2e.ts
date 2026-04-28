@@ -215,8 +215,8 @@ test.describe('responsive', () => {
   test('scales down on small viewport', async ({ page }) => {
     await page.setViewportSize({ width: 400, height: 800 });
     await page.goto('/');
-    const wrapper = page.locator('.turntable-wrapper');
-    const style = await wrapper.getAttribute('style');
+    const turntable = page.locator('.turntable');
+    const style = await turntable.getAttribute('style');
     expect(style).toContain('scale(');
     const match = style?.match(/scale\(([\d.]+)\)/);
     expect(match).toBeTruthy();
@@ -226,8 +226,8 @@ test.describe('responsive', () => {
   test('no scaling on large viewport', async ({ page }) => {
     await page.setViewportSize({ width: 1200, height: 800 });
     await page.goto('/');
-    const wrapper = page.locator('.turntable-wrapper');
-    const style = await wrapper.getAttribute('style');
+    const turntable = page.locator('.turntable');
+    const style = await turntable.getAttribute('style');
     const match = style?.match(/scale\(([\d.]+)\)/);
     expect(match).toBeTruthy();
     expect(parseFloat(match![1])).toBe(1);
