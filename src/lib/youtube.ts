@@ -20,8 +20,8 @@ export function initYouTubeAPI(
 
     (window as unknown as { onYouTubeIframeAPIReady: () => void }).onYouTubeIframeAPIReady = () => {
       const player = new YT.Player(elementId, {
-        height: '1',
-        width: '1',
+        height: '90',
+        width: '160',
         playerVars: { controls: 1, disablekb: 1 },
         events: {
           onReady: () => {
@@ -96,16 +96,12 @@ export function playFromProgress(
     return;
   }
 
-  player.mute();
+  player.setVolume(volume);
   player.playVideo();
   const trySeek = () => {
     const duration = getEffectiveDuration(player, range);
     if (duration > 0) {
       player.seekTo(range.start + progress * duration, true);
-      setTimeout(() => {
-        player.unMute();
-        player.setVolume(volume);
-      }, 300);
     } else {
       setTimeout(trySeek, 100);
     }
