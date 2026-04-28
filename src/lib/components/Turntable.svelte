@@ -103,9 +103,17 @@
   }
 
   $effect(() => {
-    if (!motorOn && spinning) {
+    if (motorOn && !spinning) {
+      spinning = true;
+      spin();
+      if (armOnRecord) {
+        seekCooldown = 60;
+        onSeek(armAngle);
+      }
+    } else if (!motorOn && spinning) {
       spinning = false;
       cancelAnimationFrame(animationId);
+      onPause();
     }
   });
 

@@ -22,6 +22,7 @@
   let playerReady = $state(false);
   let motorOn = $state(false);
   let armOnRecord = $state(false);
+  let ignoreYtState = false;
   let tonearmAngle = $state(progressToAngle(0));
 
   let groups = $state<TrackGroup[]>([]);
@@ -30,6 +31,7 @@
   let playRange = $state<PlayRange>({ start: 0, end: null });
   let showPlaylist = $state(false);
   let danceEnabled = $state(false);
+  let videoVisible = $state(false);
   let playMode = $state<'sequential' | 'shuffle' | 'repeat' | 'once'>('sequential');
   let shuffleQueue = $state<number[]>([]);
 
@@ -40,6 +42,12 @@
       },
       onEnded: () => {
         playNext();
+      },
+      onPaused: () => {
+        if (videoVisible && !ignoreYtState) motorOn = false;
+      },
+      onPlaying: () => {
+        if (videoVisible && !ignoreYtState && !motorOn) motorOn = true;
       }
     });
 
@@ -126,11 +134,15 @@
 
   function seekToArm(angle: number) {
     if (!player || !playerReady) return;
+    ignoreYtState = true;
     playFromProgress(player, angleToProgress(angle), volume, playRange);
+    setTimeout(() => (ignoreYtState = false), 1000);
   }
 
   function pause() {
+    ignoreYtState = true;
     player?.pauseVideo();
+    setTimeout(() => (ignoreYtState = false), 500);
   }
 
   function getPlaybackProgress(): number | null {
@@ -189,7 +201,9 @@
   <div class="ornament bottom-right"></div>
 
   <div class="main-area">
-    <div id="yt-player" class="yt-hidden"></div>
+    <div class="yt-player" class:yt-visible={videoVisible}>
+      <div id="yt-player"></div>
+    </div>
 
     <Turntable
       bind:motorOn
@@ -218,6 +232,12 @@
                 onclick={() => (danceEnabled = !danceEnabled)}
                 aria-label="Toggle dance">dance</button
               >
+              <button
+                class="mode-btn"
+                class:active={videoVisible}
+                onclick={() => (videoVisible = !videoVisible)}
+                aria-label="Toggle video">video</button
+              >
             </div>
             <button class="header-btn" onclick={togglePlaylist} aria-label="Close">&times;</button>
           </div>
@@ -232,7 +252,7 @@
                 <button
                   class="track-play"
                   onclick={() => loadTrack(track)}
-                  aria-label="Play {track.name}">&#9654;</button
+                  aria-label="Play {track.name}">&#9654;&#xFE0E;</button
                 >
               </div>
             {/each}
@@ -258,7 +278,7 @@
     overflow: hidden;
   }
 
-  .yt-hidden {
+  .yt-player {
     position: absolute;
     width: 1px;
     height: 1px;
@@ -267,11 +287,31 @@
     pointer-events: none;
   }
 
+  .yt-player.yt-visible {
+    position: absolute;
+    top: 8px;
+    left: 8px;
+    width: 160px;
+    height: 90px;
+    overflow: hidden;
+    opacity: 1;
+    pointer-events: auto;
+    z-index: 40;
+    border-radius: 4px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.6);
+  }
+
+  .yt-player.yt-visible :global(iframe) {
+    width: 100%;
+    height: 100%;
+  }
+
   .main-area {
     display: flex;
     align-items: center;
     gap: 24px;
     z-index: 1;
+    position: relative;
   }
 
   /* Playlist panel */

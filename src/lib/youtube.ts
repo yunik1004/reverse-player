@@ -9,6 +9,8 @@ export function initYouTubeAPI(
   callbacks: {
     onReady: () => void;
     onEnded: () => void;
+    onPaused?: () => void;
+    onPlaying?: () => void;
   }
 ): Promise<YT.Player> {
   return new Promise((resolve) => {
@@ -20,7 +22,7 @@ export function initYouTubeAPI(
       const player = new YT.Player(elementId, {
         height: '1',
         width: '1',
-        playerVars: { controls: 0, disablekb: 1 },
+        playerVars: { controls: 1, disablekb: 1 },
         events: {
           onReady: () => {
             callbacks.onReady();
@@ -29,6 +31,10 @@ export function initYouTubeAPI(
           onStateChange: (e: YT.OnStateChangeEvent) => {
             if (e.data === YT.PlayerState.ENDED) {
               callbacks.onEnded();
+            } else if (e.data === YT.PlayerState.PAUSED) {
+              callbacks.onPaused?.();
+            } else if (e.data === YT.PlayerState.PLAYING) {
+              callbacks.onPlaying?.();
             }
           }
         }
