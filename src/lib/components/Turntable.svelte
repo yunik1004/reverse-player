@@ -469,7 +469,7 @@
   .label-subtitle {
     font-family: 'Cinzel', serif;
     font-size: 7px;
-    color: rgba(212, 175, 55, 0.7);
+    color: rgb(212, 175, 55);
     letter-spacing: 0.25em;
   }
 
@@ -536,7 +536,7 @@
   .control-label {
     font-family: 'Cinzel', serif;
     font-size: 7px;
-    color: rgba(212, 175, 55, 0.35);
+    color: rgb(212, 175, 55);
     letter-spacing: 0.15em;
   }
 

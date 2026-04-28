@@ -311,7 +311,7 @@
     background: rgba(212, 175, 55, 0.08);
     border: 1px solid rgba(60, 42, 22, 0.4);
     border-radius: 3px;
-    color: rgba(212, 175, 55, 0.7);
+    color: rgb(212, 175, 55);
     font-size: 12px;
     cursor: pointer;
     padding: 2px 4px;
@@ -320,13 +320,13 @@
   }
 
   .mode-btn:hover {
-    color: rgba(212, 175, 55, 0.9);
+    color: rgb(212, 175, 55);
     border-color: rgba(212, 175, 55, 0.5);
   }
 
   .mode-btn.active {
     background: rgba(212, 175, 55, 0.25);
-    color: rgba(212, 175, 55, 0.9);
+    color: rgb(212, 175, 55);
     border-color: rgba(212, 175, 55, 0.5);
   }
 
@@ -339,14 +339,14 @@
   .header-btn {
     background: none;
     border: none;
-    color: rgba(212, 175, 55, 0.4);
+    color: rgb(212, 175, 55);
     font-size: 14px;
     cursor: pointer;
     padding: 2px 6px;
   }
 
   .header-btn:hover {
-    color: rgba(212, 175, 55, 0.8);
+    color: rgb(212, 175, 55);
   }
 
   .playlist-list {
@@ -388,7 +388,7 @@
     flex-shrink: 0;
     font-family: 'Cinzel', serif;
     font-size: 9px;
-    color: rgba(212, 175, 55, 0.6);
+    color: rgb(212, 175, 55);
     letter-spacing: 0.03em;
     white-space: nowrap;
   }
@@ -410,14 +410,14 @@
     flex-shrink: 0;
     background: none;
     border: none;
-    color: rgba(212, 175, 55, 0.4);
+    color: rgb(212, 175, 55);
     font-size: 10px;
     cursor: pointer;
     padding: 2px 4px;
   }
 
   .track-play:hover {
-    color: rgba(212, 175, 55, 0.8);
+    color: rgb(212, 175, 55);
   }
 
   @media (max-width: 768px) {
