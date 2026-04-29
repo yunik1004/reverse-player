@@ -6,6 +6,11 @@
       {
         "url": "https://youtu.be/ZfwATb8tTjg?si=iOi9aOzsagn-DKJ-",
         "name": "Forget Me Not Theme"
+      },
+      {
+        "url": "https://youtu.be/3qudtza-95Y?si=2LBtwOj4TLejaXto",
+        "name": "ReReReRegulus!",
+        "extra": true
       }
     ]
   },
@@ -16,6 +21,16 @@
       {
         "url": "https://youtu.be/BD7-UhP0egI?si=IEThgte3PMHOvBDL",
         "name": "The Prisoner in the Cave"
+      },
+      {
+        "url": "https://youtu.be/NnbIOoh_wG8?si=FMMmUWMTiPmCz0T3",
+        "name": "Thus Spoken 37",
+        "extra": true
+      },
+      {
+        "url": "https://youtu.be/aPzJhb3S6H0?si=oH_fIbkfV7KkvP2l",
+        "name": "Rule? Regulus!",
+        "extra": true
       }
     ]
   },
@@ -109,6 +124,17 @@
     ]
   },
   {
+    "version": "Ver 2.0",
+    "cover": "/album/ver2.0.webp",
+    "tracks": [
+      {
+        "url": "https://youtu.be/pmc5Q0m9V8g?si=InbkLOAadTs99H5w",
+        "name": "Frisco",
+        "extra": true
+      }
+    ]
+  },
+  {
     "version": "Ver 2.2",
     "cover": "/album/ver2.2.webp",
     "tracks": [
@@ -119,6 +145,10 @@
       {
         "url": "https://youtu.be/00HG_4wmfF0?si=YwXDUFoJBgGj4R5v",
         "name": "Whisk to L, Whisk to R"
+      },
+      {
+        "url": "https://youtu.be/W56q0syYyTU?si=tTIf0dynyA4Wo_Ww",
+        "name": "Goodbye"
       }
     ]
   },

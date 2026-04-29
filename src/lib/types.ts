@@ -7,6 +7,8 @@ export interface Track {
   start?: number;
   /** End time in seconds (default: full duration) */
   end?: number;
+  /** Extra track — only shown/played when extra mode is enabled */
+  extra?: boolean;
 }
 
 export interface TrackGroup {

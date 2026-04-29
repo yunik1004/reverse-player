@@ -32,6 +32,8 @@
   let showPlaylist = $state(false);
   let danceEnabled = $state(false);
   let videoVisible = $state(false);
+  let extraEnabled = $state(false);
+  const visibleTracks = $derived(extraEnabled ? tracks : tracks.filter((t) => !t.extra));
   let playMode = $state<'sequential' | 'shuffle' | 'repeat' | 'once'>('sequential');
   let shuffleQueue = $state<number[]>([]);
 
@@ -79,7 +81,7 @@
   }
 
   function buildShuffleQueue() {
-    const indices = tracks.map((_, i) => i);
+    const indices = visibleTracks.map((_, i) => i);
     for (let i = indices.length - 1; i > 0; i--) {
       const j = Math.floor(Math.random() * (i + 1));
       [indices[i], indices[j]] = [indices[j], indices[i]];
@@ -106,7 +108,7 @@
   );
 
   function playNext() {
-    if (tracks.length === 0) return;
+    if (visibleTracks.length === 0) return;
 
     if (playMode === 'repeat') {
       if (currentTrack) loadTrack(currentTrack);
@@ -124,11 +126,11 @@
       }
       const idx = shuffleQueue[0];
       shuffleQueue = shuffleQueue.slice(1);
-      loadTrack(tracks[idx]);
+      loadTrack(visibleTracks[idx]);
     } else {
-      const currentIdx = currentTrack ? tracks.indexOf(currentTrack) : -1;
-      const nextIdx = (currentIdx + 1) % tracks.length;
-      loadTrack(tracks[nextIdx]);
+      const currentIdx = currentTrack ? visibleTracks.indexOf(currentTrack) : -1;
+      const nextIdx = (currentIdx + 1) % visibleTracks.length;
+      loadTrack(visibleTracks[nextIdx]);
     }
   }
 
@@ -192,6 +194,12 @@
     const v = volume;
     if (player && playerReady) player.setVolume(v);
   });
+
+  // extra 토글 시 셔플 큐 재빌드
+  $effect(() => {
+    void extraEnabled;
+    if (playMode === 'shuffle') shuffleQueue = buildShuffleQueue();
+  });
 </script>
 
 <div class="page">
@@ -228,6 +236,12 @@
               >
               <button
                 class="mode-btn"
+                class:active={extraEnabled}
+                onclick={() => (extraEnabled = !extraEnabled)}
+                aria-label="Toggle extra">extra</button
+              >
+              <button
+                class="mode-btn"
                 class:active={danceEnabled}
                 onclick={() => (danceEnabled = !danceEnabled)}
                 aria-label="Toggle dance">dance</button
@@ -242,7 +256,7 @@
             <button class="header-btn" onclick={togglePlaylist} aria-label="Close">&times;</button>
           </div>
           <div class="playlist-list">
-            {#each tracks as track (track.url)}
+            {#each visibleTracks as track (track.url)}
               <div class="track-row" class:active={currentTrack?.url === track.url}>
                 <span class="track-name" use:marqueeIfOverflow>
                   <span class="track-name-scroll">
