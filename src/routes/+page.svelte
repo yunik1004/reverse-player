@@ -72,12 +72,16 @@
     playRange = { start: track.start ?? 0, end: track.end ?? null };
     const id = extractVideoId(track.url);
     if (!id || !player) return;
-    player.cueVideoById(id);
+    if (motorOn && armOnRecord) {
+      // 자동 재생 — playFromProgress의 ENDED 분기 회피
+      ignoreYtState = true;
+      player.loadVideoById({ videoId: id, startSeconds: track.start ?? 0 });
+      setTimeout(() => (ignoreYtState = false), 1000);
+    } else {
+      player.cueVideoById(id);
+    }
     player.setVolume(volume);
     tonearmAngle = progressToAngle(0);
-    if (motorOn && armOnRecord) {
-      seekToArm(tonearmAngle);
-    }
   }
 
   function buildShuffleQueue() {
