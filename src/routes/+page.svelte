@@ -7,6 +7,7 @@
     initYouTubeAPI,
     playFromProgress,
     getRangeProgress,
+    getEffectiveDuration,
     type PlayRange
   } from '$lib/youtube';
   import { base } from '$app/paths';
@@ -43,7 +44,7 @@
         playerReady = true;
       },
       onEnded: () => {
-        playNext();
+        if (motorOn) playNext();
       },
       onPaused: () => {
         if (videoVisible && !ignoreYtState) motorOn = false;
@@ -141,7 +142,17 @@
   function seekToArm(angle: number) {
     if (!player || !playerReady) return;
     ignoreYtState = true;
-    playFromProgress(player, angleToProgress(angle), volume, playRange);
+    if (motorOn) {
+      playFromProgress(player, angleToProgress(angle), volume, playRange);
+    } else {
+      // motor off: 위치만 이동, 재생 안 함
+      const duration = getEffectiveDuration(player, playRange);
+      if (duration > 0) {
+        const progress = angleToProgress(angle);
+        player.seekTo(playRange.start + progress * duration, true);
+        player.pauseVideo();
+      }
+    }
     setTimeout(() => (ignoreYtState = false), 1000);
   }
 

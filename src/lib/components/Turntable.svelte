@@ -191,7 +191,7 @@
 
   function onArmUp() {
     draggingArm = false;
-    if (motorOn && armOnRecord) {
+    if (armOnRecord) {
       seekCooldown = 60; // ~1초간 spin()의 arm 업데이트 중지
       onSeek(armAngle);
     }
