@@ -149,7 +149,10 @@
       const duration = getEffectiveDuration(player, playRange);
       if (duration > 0) {
         const progress = angleToProgress(angle);
-        player.seekTo(playRange.start + progress * duration, true);
+        const targetEnd = playRange.end ?? (player.getDuration?.() ?? 0);
+        // 정확히 end로 seek하면 ENDED 상태 발화 → currentTime이 리셋되어 arm 튕김
+        const seekPos = Math.min(playRange.start + progress * duration, targetEnd - 0.5);
+        player.seekTo(seekPos, true);
         player.pauseVideo();
       }
     }
@@ -167,7 +170,8 @@
     const progress = getRangeProgress(player, playRange);
     if (progress !== null && playRange.end !== null) {
       const current = player.getCurrentTime?.() ?? 0;
-      if (current >= playRange.end) {
+      const isPlaying = player.getPlayerState?.() === YT.PlayerState.PLAYING;
+      if (isPlaying && current >= playRange.end) {
         playNext();
         return 1;
       }

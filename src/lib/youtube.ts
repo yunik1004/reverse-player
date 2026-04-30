@@ -97,14 +97,17 @@ export function playFromProgress(
   }
 
   player.setVolume(volume);
+  const duration = getEffectiveDuration(player, range);
+  if (duration > 0) {
+    player.seekTo(range.start + progress * duration, true);
+    player.playVideo();
+    return;
+  }
   player.playVideo();
   const trySeek = () => {
-    const duration = getEffectiveDuration(player, range);
-    if (duration > 0) {
-      player.seekTo(range.start + progress * duration, true);
-    } else {
-      setTimeout(trySeek, 100);
-    }
+    const d = getEffectiveDuration(player, range);
+    if (d > 0) player.seekTo(range.start + progress * d, true);
+    else setTimeout(trySeek, 50);
   };
-  setTimeout(trySeek, 200);
+  setTimeout(trySeek, 50);
 }

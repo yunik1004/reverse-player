@@ -108,12 +108,10 @@
 
   $effect(() => {
     if (motorOn && !spinning) {
+      // 외부 motorOn=true (YT trigger) 시: spin만 시작, onSeek 호출 X
+      // (arm이 armSync로 YT progress 따라감)
       spinning = true;
       spin();
-      if (armOnRecord) {
-        seekCooldown = 60;
-        onSeek(armAngle);
-      }
     } else if (!motorOn && spinning) {
       spinning = false;
       cancelAnimationFrame(animationId);
@@ -145,25 +143,33 @@
   }
 
   // Animation loop — all DOM updates are direct, bypassing Svelte reactivity
-  let spinFrameCount = 0;
   let seekCooldown = 0; // seek 직후 쿨다운 (프레임 수)
 
   function spin() {
     platterAngle += 0.5;
     if (platterEl) platterEl.style.transform = `rotate(${platterAngle}deg)`;
+    animationId = requestAnimationFrame(spin);
+  }
 
+  // arm sync — motor 상태와 무관하게 항상 실행 (YT seek 추적)
+  let armSyncCount = 0;
+  let armSyncId: number;
+  function armSync() {
     if (seekCooldown > 0) seekCooldown--;
-
-    spinFrameCount++;
-    if (spinFrameCount % 10 === 0 && !draggingArm && armOnRecord && seekCooldown === 0) {
+    armSyncCount++;
+    if (armSyncCount % 10 === 0 && !draggingArm && armOnRecord && seekCooldown === 0) {
       const progress = getPlaybackProgress();
       if (progress !== null) {
         setArmAngle(progressToAngle(progress));
       }
     }
-
-    animationId = requestAnimationFrame(spin);
+    armSyncId = requestAnimationFrame(armSync);
   }
+
+  $effect(() => {
+    armSyncId = requestAnimationFrame(armSync);
+    return () => cancelAnimationFrame(armSyncId);
+  });
 
   // Tonearm drag
   function getPivotScreen() {
